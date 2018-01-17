@@ -1,0 +1,251 @@
+% One-page layout: (proof-)reading on display
+%%%% \documentclass[11pt,oneside,a4paper]{book}
+% Two-page layout: final printing
+\documentclass[11pt,twoside,a4paper]{book}   
+%=-=-=-=-=-=-=-=-=-=-=-=--=%
+% The user of this template may find useful to have an alternative to these 
+% officially suggested packages:
+\usepackage[czech, english]{babel}
+\usepackage[T1]{fontenc} % pouzije EC fonty 
+% pripadne pisete-li cesky, pak lze zkusit take:
+% \usepackage[OT1]{fontenc} 
+\usepackage[utf8]{inputenc}
+%=-=-=-=-=-=-=-=-=-=-=-=--=%
+% In case of problems with PDF fonts, one may try to uncomment this line:
+%\usepackage{lmodern}
+%=-=-=-=-=-=-=-=-=-=-=-=--=%
+%=-=-=-=-=-=-=-=-=-=-=-=--=%
+% Depending on your particular TeX distribution and version of conversion tools 
+% (dvips/dvipdf/ps2pdf), some (advanced | desperate) users may prefer to use 
+% different settings.
+% Please uncomment the following style and use your CSLaTeX (cslatex/pdfcslatex) 
+% to process your work. Note however, this file is in UTF-8 and a conversion to 
+% your native encoding may be required. Some settings below depend on babel 
+% macros and should also be modified. See \selectlanguage \iflanguage.
+%\usepackage{czech}  %%%%%\usepackage[T1]{czech} %%%%[IL2] [T1] [OT1]
+%=-=-=-=-=-=-=-=-=-=-=-=--=%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Styles required in your work follow %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+%\usepackage{indentfirst} %1. odstavec jako v cestine.
+\usepackage{setspace}
+\usepackage[hyphens]{url}
+\usepackage{pgfplots}
+\usepackage{forest}
+\usepackage{float}
+\usepackage{nameref}
+
+\usepackage{misc/k336_thesis_macros} % specialni makra pro formatovani DP a BP
+ % muzete si vytvorit i sva vlastni v souboru k336_thesis_macros.sty
+ % najdete  radu jednoduchych definic, ktere zde ani nejsou pouzity
+ % napriklad: 
+ % \newcommand{\bfig}{\begin{figure}\begin{center}}
+ % \newcommand{\efig}{\end{center}\end{figure}}
+ % umoznuje pouzit prikaz \bfig namisto \begin{figure}\begin{center} atd.
+
+\newcommand\TypeOfWork{Master's Thesis}   \typeout{Master's Thesis} 
+\newcommand\StudProgram{Open Informatics}
+\newcommand\StudBranch{Software Engineering}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Vyplnte nazev prace, autora a vedouciho
+% Set up Work Title, Author and Supervisor
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\WorkTitle{Multi-platform Scalable Messaging System}
+\newcommand\FirstandFamilyName{Bc. Oscar Hernández}
+\newcommand\Supervisor{Ing. Martin Mudra}
+
+
+% Pouzijete-li pdflatex, tak je prijemne, kdyz bude mit vase prace
+% funkcni odkazy i v pdf formatu
+\usepackage[
+pdftitle={\WorkTitle},
+pdfauthor={\FirstandFamilyName},
+bookmarks=true,
+colorlinks=true,
+breaklinks=true,
+urlcolor=red,
+citecolor=blue,
+linkcolor=blue,
+unicode=true,
+]
+{hyperref}
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Zvolte jednu z moznosti 
+% Choose one of the following options
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\selectlanguage{czech}
+\selectlanguage{english} 
+
+% prikaz \typeout vypise vyse uvedena nastaveni v prikazovem okne
+% pro pohodlne ladeni prace
+
+
+\iflanguage{czech}{
+	 \typeout{************************************************}
+	 \typeout{Zvoleny jazyk: cestina}
+	 \typeout{Typ prace: \TypeOfWork}
+	 \typeout{Studijni program: \StudProgram}
+	 \typeout{Obor: \StudBranch}
+	 \typeout{Jmeno: \FirstandFamilyName}
+	 \typeout{Nazev prace: \WorkTitle}
+	 \typeout{Vedouci prace: \Supervisor}
+	 \typeout{***************************************************}
+	 \newcommand\Department{Katedra počítačů}
+	 \newcommand\Faculty{Fakulta elektrotechnická}
+	 \newcommand\University{České vysoké učení technické v Praze}
+	 \newcommand\labelSupervisor{Vedoucí práce}
+	 \newcommand\labelStudProgram{Studijní program}
+	 \newcommand\labelStudBranch{Obor}
+}{
+	 \typeout{************************************************}
+	 \typeout{Language: english}
+	 \typeout{Type of Work: \TypeOfWork}
+	 \typeout{Study Program: \StudProgram}
+	 \typeout{Study Branch: \StudBranch}
+	 \typeout{Author: \FirstandFamilyName}
+	 \typeout{Title: \WorkTitle}
+	 \typeout{Supervisor: \Supervisor}
+	 \typeout{***************************************************}
+	 \newcommand\Department{Department of Computer Science and Engineering}
+	 \newcommand\Faculty{Faculty of Electrical Engineering}
+	 \newcommand\University{Czech Technical University in Prague}
+	 \newcommand\labelSupervisor{Supervisor}
+	 \newcommand\labelStudProgram{Study Program} 
+	 \newcommand\labelStudBranch{Field of Study}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%    Titulni stranka / Title page 
+
+\coverpagestarts
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%    Podekovani / Acknowledgements 
+
+\acknowledgements
+\noindent
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vel risus neque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer nec turpis et nisl vehicula rhoncus.
+
+\bigbreak
+
+Curabitur ut lacus convallis, tincidunt magna vel, rutrum elit. Proin elementum, lectus at auctor aliquet, tellus ligula aliquam elit, et molestie sapien arcu ut elit. 
+
+\bigbreak
+
+Aenean finibus ultrices libero, a volutpat purus ornare id. Nunc tincidunt ac augue eu finibus. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%   Prohlaseni / Declaration 
+
+\declaration{In Prague on \today}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    Abstract 
+ 
+\abstractpage
+
+This thesis describes a horizontally scalable server-side application that allows for messaging between multiple platforms, with emphasis on modularity and easy expandability. Messaging in the context of this thesis does not refer to instant messaging (IM), which typically encompasses user-to-user text messages. The context of messaging in this thesis is much broader, applying to any data communication between two endpoints, including machine-to-machine.
+
+\vglue40mm
+
+\noindent{\Huge \textbf{Abstrakt}}
+\vskip 2.1\baselineskip
+
+\noindent
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam vel risus neque. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer nec turpis et nisl vehicula rhoncus. Curabitur ut lacus convallis, tincidunt magna vel, rutrum elit. Proin elementum, lectus at auctor aliquet, tellus ligula aliquam elit, et molestie sapien arcu ut elit. Aenean finibus ultrices libero, a volutpat purus ornare id. Nunc tincidunt ac augue eu finibus. Praesent ultricies risus at sapien venenatis, vel mattis risus mollis.
+
+Nam nunc enim, vehicula vitae odio id, lacinia molestie ipsum. Nam vitae arcu tristique, condimentum lorem nec, rhoncus elit. Pellentesque malesuada enim quis rutrum cursus. Nulla efficitur arcu sed elit accumsan, at eleifend libero varius. Aenean aliquet leo sit amet vehicula ultricies. Proin lectus est, ultrices vitae mattis eu, rutrum a risus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Vestibulum scelerisque eget dui eget commodo. In iaculis commodo ante, ac fringilla turpis posuere eu. 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Obsah / Table of Contents 
+
+\tableofcontents
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Seznam obrazku / List of Figures 
+
+\listoffigures
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Seznam tabulek / List of Tables
+
+\listoftables
+
+
+%**************************************************************
+
+\mainbodystarts
+% horizontalní mezera mezi dvema odstavci
+%\parskip=5pt
+\normalfont
+\parskip=0.2\baselineskip plus 0.2\baselineskip minus 0.1\baselineskip
+
+% Odsazeni prvniho radku odstavce resi class book (neaplikuje se na prvni 
+% odstavce kapitol, sekci, podsekci atd.) Viz usepackage{indentfirst}.
+% Chcete-li selektivne zamezit odsazeni 1. radku nektereho odstavce,
+% pouzijte prikaz \noindent.
+% \textit{práci implementační}, viz \cite{infodp} respektive \cite{infobp}.
+
+%*****************************************************************************
+
+% \include{chapters/01_introduction}
+
+\include{chapters/02_analysis}
+
+\include{chapters/03_design}
+
+% \include{chapters/04_implementation}
+
+% \include{chapters/05_testing}
+
+% \include{chapters/06_conclusion}
+
+%*****************************************************************************
+
+\bibliographystyle{abbrv}
+%bibliographystyle{plain}
+%\bibliographystyle{psc}
+{
+\def\CS{$\cal C\kern-0.1667em\lower.5ex\hbox{$\cal S$}\kern-0.075em $}
+\bibliography{reference}
+}
+
+%*****************************************************************************
+\appendix
+
+\include{chapters/AX_abbrev}
+% \include{chapters/AX_cd}
+
+%*****************************************************************************
+
+\end{document}
