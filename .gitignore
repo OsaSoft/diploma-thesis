@@ -1,1 +1,12 @@
 # Add any directories, files, or patterns you don't want to be tracked by version control
+messagingSystem/msgr/config/application.properties
+messagingSystem/msgr/core/out/
+messagingSystem/msgr/fcm/out/
+messagingSystem/msgr/mysql/out/
+messagingSystem/msgr/out/
+messagingSystem/msgr/src/main/resources/hernandez-dp-firebase-adminsdk-un149-1017971903.json
+stuff/fcm/.gradle/
+stuff/fcm/.idea/
+stuff/fcm/out/production/classes/cz/cvut/fel/hernaosc/fcm/CustomFcmClientSettings.class
+stuff/fcm/out/production/classes/cz/cvut/fel/hernaosc/fcm/Main.class
+stuff/Fcmtest/.idea/

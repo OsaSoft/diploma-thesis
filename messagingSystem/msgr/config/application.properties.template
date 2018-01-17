@@ -1,0 +1,10 @@
+#DB settings when using mysql module
+spring.jpa.hibernate.ddl-auto=
+spring.datasource.url=jdbc:mysql://
+spring.datasource.username=
+spring.datasource.password=
+
+
+#FCM adapter settings
+msgr.adapter.fcm.projectId=
+msgr.adapter.fcm.serviceAccountFilename=

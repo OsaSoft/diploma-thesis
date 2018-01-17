@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "637833907848",
+    "firebase_url": "https://hernandez-dp.firebaseio.com",
+    "project_id": "hernandez-dp",
+    "storage_bucket": "hernandez-dp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:637833907848:android:c4887eebed825bf0",
+        "android_client_info": {
+          "package_name": "hernaosc.fel.cvut.cz.fcmtest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "637833907848-2olji01u8oldlfrt5mdp2g9c3qa3t6e2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hernaosc.fel.cvut.cz.fcmtest",
+            "certificate_hash": "abaf52ff2a06ab64d8f910cd60120437686b7c02"
+          }
+        },
+        {
+          "client_id": "637833907848-ek13tu35p93utgfsl7p2nj81llts1t61.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGQAgWEBw7KoAt7AEsl8k3kGhzy7vaEaU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "637833907848-ek13tu35p93utgfsl7p2nj81llts1t61.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

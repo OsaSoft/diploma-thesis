@@ -1,0 +1,35 @@
+buildscript {
+    ext {
+        springBootVersion = '1.5.9.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+group 'cz.cvut.fel.hernaosc.dp.msgr'
+version '0.0.1-SNAPSHOT'
+
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile('org.codehaus.groovy:groovy:2.4.13')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile("org.springframework.boot:spring-boot-starter-data-jpa")
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-4"
+    testCompile 'org.spockframework:spock-spring:1.1-groovy-2.4-rc-4'
+
+    testCompile("com.h2database:h2")
+}
