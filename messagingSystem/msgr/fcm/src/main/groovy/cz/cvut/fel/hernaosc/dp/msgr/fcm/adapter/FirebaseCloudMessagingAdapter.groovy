@@ -33,7 +33,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 		}
 
 		try {
-			Pushraven.accountFile = new ClassPathResource(serviceAccountFilename).getFile()
+			Pushraven.accountFile = new ClassPathResource(serviceAccountFilename).file
 			Pushraven.projectId = projectId
 		} catch (IOException ex) {
 			log.error("Could dont find FCM service account file called '$serviceAccountFilename'", ex)
@@ -59,7 +59,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 						.token(device.token)
 
 		FcmResponse response = Pushraven.push(msg)
-		println response
+		log.debug "Received response $response"
 		true
 	}
 
@@ -76,7 +76,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 				.token(device.token)
 
 		FcmResponse response = Pushraven.push(msg)
-		println response
+		log.debug "Received response $response"
 		true
 	}
 }
