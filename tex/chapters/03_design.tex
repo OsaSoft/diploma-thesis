@@ -25,7 +25,7 @@ Figure ~\ref{fig:layer-arch} shows these three layers and the components belongi
     \label{fig:s-impl-arch}
 \end{figure}
 
-\subsection{Data Layer}
+\subsection{Data Layer} \label{design:data-layer}
 The data layer will be used to persistently store data regarding how messages should be handled and how they are to be delivered to their intended recipient. After analysing the necessary requirements, the data to be stored was divided into the following entities.
 \begin{itemize}
 \item \textbf{Group:} The Group entity represents a collection of Users, aggregated for some reason, eg. a topic in a publish/subscribe pattern.
@@ -95,7 +95,7 @@ A critical part of the requirements put onto the system is its high flexibility 
 \subsection{Core Module}
 The Core module, or Core library, is the heart of the entire system. The Core module provides the interfaces needed for other modules to implement and Spring Managed Beans (from now on referred to simply as Beans). Beans are objects whose lifecycle is managed by the Spring's IoC Container's Application Context, which means the Spring Container initializes and configures them and where needed, allows them to be injected\cite{spring-beans}. These Beans provide the main business logic of the application as well as manage the cooperation between all modules. The design of these interactions is further elaborated upon in the following sections.
 
-\subsection{Database Modularity}
+\subsection{Database Modularity} \label{design:database-modularity}
 The system's access to the data layer has been designed in a fully modular way, so that the end deployment is not dependent on any one type or provider of database. The result of this effort for maximum freedom and interchangeability are the interfaces in the \textit{core.db} package, as seen in Figure \ref{fig:core-db-module}.
 
 \begin{figure}[!ht]
@@ -110,7 +110,7 @@ Any module that wishes to implement access to a database must create JPA Entitie
 \subsection{Platform Modularity}
 One of the key features of the system is its multi-platform support. In order to be able to support the widest possible range of platforms, the platform portion of the system had to be designed with complete modularity in mind. The results of the design choices made based on these requirements led to the creation of the \textit{IPlatformAdapter} interface and \textit{@PlatformAdapter} annotations, which can be seen in more detail in Figure \ref{fig:core-platform-module}.
 
-\begin{figure}[!ht]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.95\textwidth]{figures/03_design/core-platform-module}
     \caption{Interfaces for platform modules in the \textit{core.platform} package}
@@ -124,9 +124,38 @@ Platform Adapters are Spring Managed Beans that implement the Core module's \tex
 
 Adapters will be automatically found at system startup by the Core module's \textit{AdapterService} using Spring's Application Context and registered based on the platform's name, as specified in the \textit{@PlatformAdapter} annotation. After which whenever a message is sent to a device through the \textit{MessagingService}, the \textit{AdapterService} will provide the Adapter needed to send message for the platform of that device to the \textit{MessagingService}, which will then use it to send the message. The sequence of these events including an example message being sent can be seen illustrated in Figure \ref{fig:adapter-flow}
 
-\begin{figure}[!ht]
+\begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.9\textwidth]{figures/03_design/adapter-flow}
     \caption{Sequence diagram indicating the resolution process of Adapters}
     \label{fig:adapter-flow}
 \end{figure}
+
+\clearpage
+
+\section{Scalability Design}
+This section describes the architecture proposed in order to achieve a horizontally scalable system, as well as how the proposed architecture deals with possible problematic scenarios described in Section \ref{analysis-scale} \nameref{analysis-scale}.
+
+The proposed design of the system architecture to achieve horizontal scalability is shown below in Figure \ref{fig:scalability-architecture}. The design can be split into four main components: \textbf{Nodes, Node Coordinator, Message Queue} and \textbf{Database}, the connections between these are shown in the Figure in different colours (see legend in Figure \ref{fig:scalability-architecture}). The responsibilities as well as the way in which the different components are connected and communicate with each other are described in detailed in the following sections.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/03_design/scalability-architecture}
+    \caption{Architecture design for horizontal scalability}
+    \label{fig:scalability-architecture}
+\end{figure}
+
+\subsection{Scalability Architecture Components}
+\subsubsection{Nodes}
+The Nodes form the core of the system. A node is an instance of the application containing all of the business logic. A Node's main responsibility is to dispatch messages to client devices as well as resolving groupings (such as \textit{Group} or \textit{User}, see Section \ref{design:data-layer} \nameref{design:data-layer}). The Nodes are also the system's main scalability point, as the amount of load the system can process is proportional to the number of active Nodes in the system.
+
+Nodes are aware of each other, as they receive a list of Nodes ordered by least load by the Node Coordinator (see Section \ref{design:node-coordinator} \nameref{design:node-coordinator}).
+
+\subsubsection{Node Coordinator} \label{design:node-coordinator}
+The Node Coordinator is a simple component, whose main responsibility is to keep track of all Nodes in the system, as well as perform periodical health checks on them. Each Node should connect and announce its presence to the Node Coordinator upon start-up. The Node Coordinator also provides its connected Nodes with a list of \textit{n} least loaded Nodes.
+
+\subsubsection{Message Queue}
+The Message Queue component is an implementation of a message queue which is inherently scalable. The message queue channels correspond to individual devices connected to Nodes, i.e. channel \textit{device1} will contain messages addressed to a device with id \textit{device1}, or groupings, i.e. channels \textit{group3} or \textit{user42} for Groups or Users, respectively.
+
+\subsubsection{Database}
+The Database component is a database layer shared between Nodes, containing all persistent data. As the database layer is fully modular, the end implementation used is up to the discretion of whoever is building the system (see Section \ref{design:database-modularity} \nameref{design:database-modularity}). However, in order to create a system that is fully scalable a scalable database solution (e.g. database cluster) is recommended.

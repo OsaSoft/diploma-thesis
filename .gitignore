@@ -10,3 +10,6 @@ stuff/fcm/.idea/
 stuff/fcm/out/production/classes/cz/cvut/fel/hernaosc/fcm/CustomFcmClientSettings.class
 stuff/fcm/out/production/classes/cz/cvut/fel/hernaosc/fcm/Main.class
 stuff/Fcmtest/.idea/
+messagingSystem/coordinator/common/build/
+messagingSystem/coordinator/common/out/
+messagingSystem/coordinator/gradle/wrapper/

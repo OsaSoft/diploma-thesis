@@ -353,3 +353,29 @@ Pushraven\footnote{Pushraven <\url{https://github.com/Raudius/Pushraven}>} is a 
 
 \subsubsection*{FCM library conclusion}
 Due to its good design, ease of use, fast update intervals and support of the more modern FCM HTTP v1 APIs, the library used in the sample implementation will be Pushraven.
+
+\section{Scalability Analysis}
+In order to achieve a system that is horizontally scalable, the system must be able to easily run distributed among different machines, let us call every such instance of the back-end application a \textit{node}. The system must be able to run across multiple nodes, distributing the computational load among these and it must be easy to add or remove nodes from the system while it maintains full functionality. This section describes the requirements on such a system and various problematic scenarios that may occur and the system must be able to handle.
+
+\subsection{Problematic Scenarios} \label{analysis-scale}
+\subsubsection{Servicing a large amount of clients} \label{analysis-scale-large-no}
+This is the most basic use case for a scalable system. The system must be able to service a large amount of clients at the same time without any significant performance loss or becoming overloaded and stop servicing them at all.
+
+This is a problematic scenario for applications as the infrastructure an application runs on has limited resources. An increasing amount of clients can be serviced by vertically scaling the application, i.e. adding more resources, such as CPU speed and/or cores and RAM memory, but this approach is feasible only to some extent, which is where horizontal scaling comes into play. By scaling the system horizontally, onto multiple machines, the load can be better distributed.
+
+This scenario is expected to appear very often, as a large amount of clients are to be using the system simultaneously.
+
+\subsubsection{A large amount of clients connects at the same time}
+This scenario may occur when a large amount of clients attempts to connect to the system simultaneously. The difference between this scenario and the scenario described in Section \ref{analysis-scale-large-no} \nameref{analysis-scale-large-no} is that a large number of clients must not only be serviced at the same time, but they are also initializing their connection to the system simultaneously, placing great strain onto the entry point of the system.
+
+This scenario is expected to occur very rarely on a very large scale and in minor scales during peak times, for example if an application utilizing the system would connect when the person using it begins using their phone a peak of connections can be expected in the morning, when people wake up and start their day.
+
+\subsubsection{A large amount of messages for a single client}
+This case describes a scenario where a large number of clients are all sending messages to a single addressee client. The possible problem is that a client is connected to a single node, therefore the messages that are to be delivered to it cannot be scaled across multiple nodes.
+
+This scenario may happen in cases where the system is used to link a server to its clients, for example let us imagine a tracking app for food delivery. The individual clients would be the apps on the phones of each delivery driver, while the client receiving all their messages would be the server running the tracking application. All the drivers constantly stream their position data to the "server" through the system, resulting in a large number of messages from various clients, all addressed to a single recipient client.
+
+\subsubsection{A node dies}
+This scenario describes a situation where one of the nodes dies or is disconnected. The system must be able to respond to such a situation by reconnecting any clients that were connected to this node to a different node or set of nodes and manage to reroute any messages that are addressed to these clients.
+
+This scenario is expected to happen rarely, with a cause either due to technical issues or for example upgrading the application on a node to a new version.
