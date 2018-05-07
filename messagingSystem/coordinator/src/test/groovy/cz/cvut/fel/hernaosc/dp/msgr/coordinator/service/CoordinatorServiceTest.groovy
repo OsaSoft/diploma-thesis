@@ -1,6 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
+import groovy.time.TimeCategory
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
 import org.apache.http.conn.ConnectTimeoutException
@@ -45,6 +46,16 @@ class CoordinatorServiceTest extends Specification {
             0 * coordinatorService.invokeMethod('checkNodeHealth', _) >> new NodeStatus(load: 0.4)
         and:
             coordinatorService.nodes[node] == nodeStatus
+    }
+
+    def "Can remove node"() {
+        given:
+            def node = initBasicNodes(10).first()
+
+        when:
+            coordinatorService.removeNode(node)
+        then:
+            coordinatorService.nodes.size() == 9
     }
 
     @Unroll
@@ -151,7 +162,7 @@ class CoordinatorServiceTest extends Specification {
             status.load == 0.5
     }
 
-    def "Handles node failing a two consecutive health checks"() {
+    def "Handles node failing two consecutive health checks within timeout"() {
         given:
             def node = initBasicNodes(1).first()
         and:
@@ -169,6 +180,42 @@ class CoordinatorServiceTest extends Specification {
             !coordinatorService.nodes[node].responding
 
         when: "another health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "health check on node fails"
+            1 * restClientMock.get(_) >> {
+                throw new ConnectTimeoutException()
+            }
+        and: "node is still unresponsive"
+            !coordinatorService.nodes[node].responding
+    }
+
+    def "Handles node failing two consecutive health checks outside timeout"() {
+        given:
+            def node = new MsgrNode(address: "test").withNewId()
+            def status = new NodeStatus(load: 0.1)
+        and:
+            coordinatorService.nodes[node] = status
+        and:
+            def restClientMock = GroovyMock(RESTClient, global: true)
+
+        when: "health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "health check on node fails"
+            1 * restClientMock.get(_) >> {
+                throw new ConnectTimeoutException()
+            }
+        and: "node is set as unresponsive"
+            !coordinatorService.nodes[node].responding
+
+        when: "last success was over threshold"
+            use(TimeCategory) {
+                coordinatorService.nodes[node].lastSuccessfulCheck = new Date() - (coordinatorService.nodeTimeout + 1).seconds
+            }
+        and: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
             1 * new RESTClient("test", _) >> restClientMock

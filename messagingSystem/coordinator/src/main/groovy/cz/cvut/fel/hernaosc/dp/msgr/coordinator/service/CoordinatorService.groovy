@@ -15,14 +15,16 @@ import java.util.concurrent.ConcurrentHashMap
 @Slf4j
 class CoordinatorService {
     @Value('coordinator.list.node.amount:#{10}')
-    private int numListedNodes
+    private int numListedNodes = 10
     @Value('coordinator.list.node.max-load:#{0.9}')
-    private float maxLoad
+    private float maxLoad = 0.9
+    @Value('coordinator.node.unhealthy.timeout:#{15}')
+    private int nodeTimeout = 15
 
     Map<MsgrNode, NodeStatus> nodes = [:] as ConcurrentHashMap
 
     void addNode(MsgrNode node) {
-        log.info "Node '$node' has connected."
+        log.info "Node '$node' has connected"
 
         if (!nodes[node]) {
             def status = checkNodeHealth(node)
@@ -30,6 +32,11 @@ class CoordinatorService {
                 nodes[node] = status
             }
         }
+    }
+
+    void removeNode(MsgrNode node) {
+        log.info "Disconnecting node '$node'"
+        nodes.remove(node)
     }
 
     void doHealthCheck() {
@@ -43,9 +50,8 @@ class CoordinatorService {
                     nodes[node] = currentStatus
                 } else {
                     currentStatus = nodes[node]
-                    if (currentStatus.responding) {
-                        currentStatus.responding = false
-                    } else {
+                    currentStatus.responding = false
+                    if (new Date().time - currentStatus.lastSuccessfulCheck.time > nodeTimeout * 1000) {
                         nodesToRemove << node
                     }
                 }
@@ -53,6 +59,8 @@ class CoordinatorService {
 
             nodesToRemove.eachParallel { nodes.remove(it) }
         }
+
+        log.debug "Health check finished"
     }
 
     private NodeStatus checkNodeHealth(MsgrNode node) {
@@ -65,11 +73,14 @@ class CoordinatorService {
                 log.warn "Health check on Node '$node.address' returned code '$response.status'"
             }
         } catch (Exception ex) {
-            log.warn "Error getting health from node '$node'", ex
+            log.warn "Error getting health from node '$node'"
+            log.trace "Error '$ex.message': ", ex
         }
     }
 
     List<MsgrNode> getLeastLoadedNodes() {
+        log.debug "Getting $numListedNodes least loaded nodes"
+
         GParsPool.withPool {
             //first filter by responding and load less than max threshold
             nodes.findAllParallel { node, status ->
