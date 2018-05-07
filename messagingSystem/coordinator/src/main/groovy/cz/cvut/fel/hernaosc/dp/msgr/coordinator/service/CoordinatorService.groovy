@@ -2,7 +2,7 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import groovy.util.logging.Slf4j
-import groovyx.net.http.HttpResponseException
+import groovyx.gpars.GParsPool
 import groovyx.net.http.RESTClient
 import net.sf.json.JSON
 import org.apache.http.HttpStatus
@@ -21,14 +21,37 @@ class CoordinatorService {
 
     Map<MsgrNode, NodeStatus> nodes = [:] as ConcurrentHashMap
 
+    void addNode(MsgrNode node) {
+        log.info "Node '$node' has connected."
+
+        if (!nodes[node]) {
+            def status = checkNodeHealth(node)
+            if (status) {
+                nodes[node] = status
+            }
+        }
+    }
+
     void doHealthCheck() {
         log.debug "Starting health check on ${nodes.size()} connected nodes"
-        nodes.each { node, status ->
-            def currentStatus = checkNodeHealth(node)
-            if (currentStatus) {
-                nodes[node] = currentStatus
-                //TODO other cases
+
+        def nodesToRemove = [].asSynchronized()
+        GParsPool.withPool {
+            nodes.eachParallel { node, status ->
+                def currentStatus = checkNodeHealth(node)
+                if (currentStatus) {
+                    nodes[node] = currentStatus
+                } else {
+                    currentStatus = nodes[node]
+                    if (currentStatus.responding) {
+                        currentStatus.responding = false
+                    } else {
+                        nodesToRemove << node
+                    }
+                }
             }
+
+            nodesToRemove.eachParallel { nodes.remove(it) }
         }
     }
 
@@ -41,20 +64,22 @@ class CoordinatorService {
             } else {
                 log.warn "Health check on Node '$node.address' returned code '$response.status'"
             }
-        } catch (HttpResponseException ex) {
+        } catch (Exception ex) {
             log.warn "Error getting health from node '$node'", ex
         }
     }
 
     List<MsgrNode> getLeastLoadedNodes() {
-        //first filter by responding and load less than max threshold
-        nodes.findAll { node, status ->
-            status.responding && status.load <= maxLoad
+        GParsPool.withPool {
+            //first filter by responding and load less than max threshold
+            nodes.findAllParallel { node, status ->
+                status.responding && status.load <= maxLoad
+            }
+            //next sort by load and only get Nodes
+                    .toSorted { a, b -> a.value.load <=> b.value.load }.keySet()
+            //finally take first numListedNodes elems
+                    .take(numListedNodes) as List
         }
-        //next sort by load and only get Nodes
-                .toSorted { a, b -> a.value.load <=> b.value.load }.keySet()
-        //finally take first numListedNodes elems
-                .take(numListedNodes) as List
     }
 }
 

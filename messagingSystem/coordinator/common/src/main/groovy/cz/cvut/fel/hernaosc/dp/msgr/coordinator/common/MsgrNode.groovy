@@ -2,7 +2,7 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.common
 
 import groovy.transform.ToString
 
-@ToString
+@ToString(includeNames = true, includePackage = false)
 class MsgrNode implements Serializable {
     private static final long serialVersionUID = 1
 

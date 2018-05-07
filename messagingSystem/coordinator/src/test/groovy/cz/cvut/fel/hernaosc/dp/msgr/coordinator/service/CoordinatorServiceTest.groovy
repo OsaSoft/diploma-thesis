@@ -3,6 +3,7 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
+import org.apache.http.conn.ConnectTimeoutException
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -14,6 +15,36 @@ class CoordinatorServiceTest extends Specification {
     }
 
     void cleanup() {
+    }
+
+    def "Can add node"() {
+        given:
+            coordinatorService = Spy(CoordinatorService)
+            def node = new MsgrNode(address: "test").withNewId()
+            def status = new NodeStatus(load: 0.4)
+
+        when:
+            coordinatorService.addNode(node)
+        then:
+            1 * coordinatorService.invokeMethod('checkNodeHealth', [node]) >> status
+        and:
+            coordinatorService.nodes[node].load == status.load
+    }
+
+    def "When adding existing node, nothing is changed"() {
+        given:
+            coordinatorService = Spy(CoordinatorService)
+            def node = new MsgrNode(address: "test").withNewId()
+            def nodeStatus = new NodeStatus(load: 0.1)
+        and:
+            coordinatorService.nodes[node] = nodeStatus
+
+        when:
+            coordinatorService.addNode(node)
+        then:
+            0 * coordinatorService.invokeMethod('checkNodeHealth', _) >> new NodeStatus(load: 0.4)
+        and:
+            coordinatorService.nodes[node] == nodeStatus
     }
 
     @Unroll
@@ -48,6 +79,23 @@ class CoordinatorServiceTest extends Specification {
             3              | 0         | 1
     }
 
+    def "list of least loaded nodes doesnt include unresponsive nodes"() {
+        given:
+            coordinatorService.numListedNodes = 10
+            coordinatorService.maxLoad = 1
+        and:
+            def nodes = initBasicNodes(10)
+        and:
+            coordinatorService.nodes[nodes[2]].responding = false
+            coordinatorService.nodes[nodes[5]].responding = false
+            coordinatorService.nodes[nodes[8]].responding = false
+
+        when:
+            def result = coordinatorService.leastLoadedNodes
+        then:
+            result.size() == 7
+    }
+
     @Unroll
     def "health check is done on all nodes and updates their status (#numNodes nodes)"() {
         given:
@@ -69,6 +117,67 @@ class CoordinatorServiceTest extends Specification {
 
         where:
             numNodes << [10, 5, 1]
+    }
+
+    def "Handles node failing a single health check"() {
+        given:
+            def node = initBasicNodes(1).first()
+        and:
+            def restClientMock = GroovyMock(RESTClient, global: true)
+
+        when: "health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "health check on node fails"
+            1 * restClientMock.get(_) >> {
+                throw new ConnectTimeoutException()
+            }
+        and: "node is set as unresponsive"
+            !coordinatorService.nodes[node].responding
+
+        when: "another health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "node is responding again"
+            1 * restClientMock.get(_) >> [
+                    status: HttpStatus.SC_OK,
+                    data  : [load: 0.5]
+            ]
+        and: "node is responsive again and updated"
+            def status = coordinatorService.nodes[node]
+            status.responding
+            status.load == 0.5
+    }
+
+    def "Handles node failing a two consecutive health checks"() {
+        given:
+            def node = initBasicNodes(1).first()
+        and:
+            def restClientMock = GroovyMock(RESTClient, global: true)
+
+        when: "health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "health check on node fails"
+            1 * restClientMock.get(_) >> {
+                throw new ConnectTimeoutException()
+            }
+        and: "node is set as unresponsive"
+            !coordinatorService.nodes[node].responding
+
+        when: "another health check is performed"
+            coordinatorService.doHealthCheck()
+        then:
+            1 * new RESTClient("test", _) >> restClientMock
+        and: "health check on node fails"
+            1 * restClientMock.get(_) >> {
+                throw new ConnectTimeoutException()
+            }
+        and: "node is removed from connected nodes"
+            !coordinatorService.nodes[node]
     }
 
     private initBasicNodes(int num) {
