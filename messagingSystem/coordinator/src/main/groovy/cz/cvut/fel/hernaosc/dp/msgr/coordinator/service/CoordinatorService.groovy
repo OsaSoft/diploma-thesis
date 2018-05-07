@@ -2,6 +2,10 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import groovy.util.logging.Slf4j
+import groovyx.net.http.HttpResponseException
+import groovyx.net.http.RESTClient
+import net.sf.json.JSON
+import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -20,7 +24,25 @@ class CoordinatorService {
     void doHealthCheck() {
         log.debug "Starting health check on ${nodes.size()} connected nodes"
         nodes.each { node, status ->
-            //TODO
+            def currentStatus = checkNodeHealth(node)
+            if (currentStatus) {
+                nodes[node] = currentStatus
+                //TODO other cases
+            }
+        }
+    }
+
+    private NodeStatus checkNodeHealth(MsgrNode node) {
+        def client = new RESTClient(node.address, JSON)
+        try {
+            def response = client.get path: "/health"
+            if (response.status == HttpStatus.SC_OK) {
+                new NodeStatus(load: response.data.load)
+            } else {
+                log.warn "Health check on Node '$node.address' returned code '$response.status'"
+            }
+        } catch (HttpResponseException ex) {
+            log.warn "Error getting health from node '$node'", ex
         }
     }
 
@@ -30,9 +52,9 @@ class CoordinatorService {
             status.responding && status.load <= maxLoad
         }
         //next sort by load and only get Nodes
-        .toSorted { a, b -> a.value.load <=> b.value.load }.keySet()
+                .toSorted { a, b -> a.value.load <=> b.value.load }.keySet()
         //finally take first numListedNodes elems
-        .take(numListedNodes) as List
+                .take(numListedNodes) as List
     }
 }
 

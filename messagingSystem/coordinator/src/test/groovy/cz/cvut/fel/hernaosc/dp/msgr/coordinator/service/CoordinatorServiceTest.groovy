@@ -1,6 +1,8 @@
 package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
+import groovyx.net.http.RESTClient
+import org.apache.http.HttpStatus
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -46,15 +48,27 @@ class CoordinatorServiceTest extends Specification {
             3              | 0         | 1
     }
 
-    def "health check is done on all nodes and updates their status"() {
+    @Unroll
+    def "health check is done on all nodes and updates their status (#numNodes nodes)"() {
         given:
-            initBasicNodes(10)
+            def nodes = initBasicNodes(numNodes)
+        and:
+            def restClientMock = GroovyMock(RESTClient, global: true)
 
         when:
             coordinatorService.doHealthCheck()
         then:
-            //TODO
-            false
+            numNodes * new RESTClient("test", _) >> restClientMock
+        and:
+            numNodes * restClientMock.get(_) >> [
+                    status: HttpStatus.SC_OK,
+                    data  : [load: 0.5]
+            ]
+        and:
+            nodes.every { coordinatorService.nodes[it].load == 0.5 }
+
+        where:
+            numNodes << [10, 5, 1]
     }
 
     private initBasicNodes(int num) {
@@ -63,6 +77,8 @@ class CoordinatorServiceTest extends Specification {
         nodes.eachWithIndex { node, i ->
             coordinatorService.nodes[node] = status[i]
         }
+
+        nodes
     }
 
     private makeNodes(int num) {
