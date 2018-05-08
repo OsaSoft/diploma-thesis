@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap
 @Service
 @Slf4j
 class CoordinatorService {
-    @Value('coordinator.list.node.amount:#{10}')
+    @Value('${coordinator.list.node.amount:#{10}}')
     private int numListedNodes = 10
-    @Value('coordinator.list.node.max-load:#{0.9}')
+    @Value('${coordinator.list.node.max-load:#{0.9}}')
     private float maxLoad = 0.9
-    @Value('coordinator.node.unhealthy.timeout:#{15}')
+    @Value('${coordinator.node.unhealthy.timeout:#{15}}')
     private int nodeTimeout = 15
 
     Map<MsgrNode, NodeStatus> nodes = [:] as ConcurrentHashMap

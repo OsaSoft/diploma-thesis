@@ -11,7 +11,7 @@ class NodeController {
     @Autowired
     private CoordinatorService coordinatorService
 
-    @Value('coordinator.node.cache.time:#{5}')
+    @Value('${coordinator.node.cache.time:#{5}}')
     private int nodesUpdateTimeout = 5
 
     private List<MsgrNode> freeNodes
