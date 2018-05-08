@@ -8,3 +8,11 @@ spring.datasource.password=
 #FCM adapter settings
 msgr.adapter.fcm.projectId=
 msgr.adapter.fcm.serviceAccountFilename=
+
+# MSGR Node settings
+# node ID to use when connecting to Coordinator. Defaults to random UUID
+#msgr.node.id=
+# node address (including any port other than 80) that the Coordinator will use to health check and coordinate traffic
+#msgr.node.address=
+# Address (including any port other than 80) for the Node Coordinator
+#msgr.coordinator.address=
