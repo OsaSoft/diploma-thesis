@@ -28,7 +28,7 @@ repositories {
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-quartz')
-    compile('org.codehaus.groovy:groovy:2.4.13')
+    compile('org.codehaus.groovy:groovy-all:2.4.13')
 
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7'
     compile "org.codehaus.gpars:gpars:1.2.1"

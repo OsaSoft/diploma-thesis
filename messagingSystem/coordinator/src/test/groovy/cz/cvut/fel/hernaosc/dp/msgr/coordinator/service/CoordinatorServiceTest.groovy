@@ -117,7 +117,7 @@ class CoordinatorServiceTest extends Specification {
         when:
             coordinatorService.doHealthCheck()
         then:
-            numNodes * new RESTClient("test", _) >> restClientMock
+            numNodes * new RESTClient("http://test", _) >> restClientMock
         and:
             numNodes * restClientMock.get(_) >> [
                     status: HttpStatus.SC_OK,
@@ -139,7 +139,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -150,7 +150,7 @@ class CoordinatorServiceTest extends Specification {
         when: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "node is responding again"
             1 * restClientMock.get(_) >> [
                     status: HttpStatus.SC_OK,
@@ -171,7 +171,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -182,7 +182,7 @@ class CoordinatorServiceTest extends Specification {
         when: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -203,7 +203,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -218,7 +218,7 @@ class CoordinatorServiceTest extends Specification {
         and: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("test", _) >> restClientMock
+            1 * new RESTClient("http://test", _) >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()

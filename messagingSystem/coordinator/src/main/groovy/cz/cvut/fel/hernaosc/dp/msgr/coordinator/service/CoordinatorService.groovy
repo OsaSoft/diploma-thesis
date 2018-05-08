@@ -3,8 +3,8 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
+import groovyx.net.http.ContentType
 import groovyx.net.http.RESTClient
-import net.sf.json.JSON
 import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -30,6 +30,8 @@ class CoordinatorService {
             def status = checkNodeHealth(node)
             if (status) {
                 nodes[node] = status
+            } else {
+                log.warn "Could not add node $node because initial healt check failed"
             }
         }
     }
@@ -64,16 +66,22 @@ class CoordinatorService {
     }
 
     private NodeStatus checkNodeHealth(MsgrNode node) {
-        def client = new RESTClient(node.address, JSON)
+        log.trace "Starting health check on node $node"
+        def client = new RESTClient("http://$node.address")
         try {
-            def response = client.get path: "/health"
+            def response = client.get(
+                    path: "/health",
+                    contentType: ContentType.JSON,
+                    headers: [Accept: 'application/json']
+            )
+
             if (response.status == HttpStatus.SC_OK) {
                 new NodeStatus(load: response.data.load)
             } else {
                 log.warn "Health check on Node '$node.address' returned code '$response.status'"
             }
         } catch (Exception ex) {
-            log.warn "Error getting health from node '$node'"
+            log.warn "Error getting health from node '$node'. Reason: $ex.message"
             log.trace "Error '$ex.message': ", ex
         }
     }

@@ -2,8 +2,8 @@ package cz.cvut.fel.hernaosc.dp.msgr.core
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import groovy.util.logging.Slf4j
-import groovyx.net.http.RESTClient
 import groovyx.net.http.ContentType
+import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -37,13 +37,14 @@ class CoordinatorConnector {
         def node = new MsgrNode(nodeId: nodeId, address: address)
         log.info "Connecting to Node Coordinator on address '$coordinatorAddress' as node $node"
 
-        def client = new RESTClient(coordinatorAddress)
+        def client = new RESTClient("http://$coordinatorAddress")
         def response
         try {
             response = client.post(path: "/connect",
                     contentType: ContentType.JSON,
                     body: node,
-                    headers: [Accept: 'application/json'])
+                    headers: [Accept: 'application/json']
+            )
 
             if (response.status == HttpStatus.SC_OK) {
                 log.info "Successfully connected to Coordinator"
