@@ -100,6 +100,10 @@ class CoordinatorService {
                     .take(numListedNodes) as List
         }
     }
+
+    Map<MsgrNode, NodeStatus> getNodes() {
+        nodes
+    }
 }
 
 class NodeStatus {

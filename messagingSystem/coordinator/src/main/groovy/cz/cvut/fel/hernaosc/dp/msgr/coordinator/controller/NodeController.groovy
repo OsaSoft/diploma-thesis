@@ -2,8 +2,10 @@ package cz.cvut.fel.hernaosc.dp.msgr.coordinator.controller
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.service.CoordinatorService
+import groovy.xml.MarkupBuilder
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -20,7 +22,7 @@ class NodeController {
 
     @RequestMapping(path = "/free-nodes", method = RequestMethod.GET)
     List<MsgrNode> getLeastLoadedNodes() {
-        if (!(freeNodes && lastUpdate) || (new Date().time - lastUpdate.time > nodesUpdateTimeout * 1000) ) {
+        if (!(freeNodes && lastUpdate) || (new Date().time - lastUpdate.time > nodesUpdateTimeout * 1000)) {
             freeNodes = coordinatorService.leastLoadedNodes
             lastUpdate = new Date()
         }
@@ -40,5 +42,44 @@ class NodeController {
 
     void disconnectNode(@RequestBody MsgrNode node) {
         coordinatorService.removeNode(node)
+    }
+
+    @RequestMapping(path = "/monitor", produces = MediaType.TEXT_HTML_VALUE)
+    def monitorPage() {
+        def writer = new StringWriter()
+
+        new MarkupBuilder(writer).html {
+            head {
+                title "Msgr Node status monitor"
+            }
+            body {
+                h1 "Msgr Node status monitor"
+
+                table("border": 1) {
+                    thead {
+                        tr {
+                            th("ID")
+                            th("Address")
+                            th("Responding")
+                            th("CPU Load (%)")
+                            th("Last Succesful Check")
+                        }
+                    }
+                    tbody {
+                        coordinatorService.nodes.each { node, status ->
+                            tr {
+                                td(node.nodeId)
+                                td(node.address)
+                                td(status.responding)
+                                td((status.load * 100).round(2))
+                                td(status.lastSuccessfulCheck)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        writer.toString()
     }
 }
