@@ -1,6 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
+import cz.cvut.fel.hernaosc.dp.msgr.coordinator.dto.NodeStatus
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import groovyx.net.http.ContentType
@@ -76,7 +77,7 @@ class CoordinatorService {
             )
 
             if (response.status == HttpStatus.SC_OK) {
-                new NodeStatus(load: response.data.load)
+                new NodeStatus(load: response.data.load, memory: response.data.memory)
             } else {
                 log.warn "Health check on Node '$node.address' returned code '$response.status'"
             }
@@ -104,10 +105,4 @@ class CoordinatorService {
     Map<MsgrNode, NodeStatus> getNodes() {
         nodes
     }
-}
-
-class NodeStatus {
-    float load
-    Date lastSuccessfulCheck = new Date()
-    boolean responding = true
 }

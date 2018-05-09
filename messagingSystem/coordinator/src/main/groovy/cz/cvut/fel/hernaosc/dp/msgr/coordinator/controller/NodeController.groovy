@@ -1,6 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.coordinator.controller
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
+import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.sys.SysUtils
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.service.CoordinatorService
 import groovy.xml.MarkupBuilder
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,29 +51,52 @@ class NodeController {
 
         new MarkupBuilder(writer).html {
             head {
-                title "Msgr Node status monitor"
+                title "Msgr Status Monitor"
             }
             body {
-                h1 "Msgr Node status monitor"
-
+                h1 "Msgr NodeCoordinator status"
                 table("border": 1) {
                     thead {
                         tr {
-                            th("ID")
-                            th("Address")
-                            th("Responding")
-                            th("CPU Load (%)")
-                            th("Last Succesful Check")
+                            th "CPU Load (%)"
+                            th "Free Memory (%)"
+                            th "Memory (free/total)"
+                        }
+                    }
+                    tbody {
+                        tr {
+                            td SysUtils.processCpuLoad
+
+                            def memory = SysUtils.memoryStatus
+                            td memory.percent
+                            td "$memory.free/$memory.total B"
+                        }
+                    }
+                }
+
+                h1 "Msgr Node status monitor"
+
+                table("border": 1) {
+                    caption "Total connected nodes: ${coordinatorService.nodes.size()}"
+                    thead {
+                        tr {
+                            th "ID"
+                            th "Address"
+                            th "Responding"
+                            th "CPU Load (%)"
+                            th "Free Memory (%)"
+                            th "Last Succesful Check"
                         }
                     }
                     tbody {
                         coordinatorService.nodes.each { node, status ->
                             tr {
-                                td(node.nodeId)
-                                td(node.address)
-                                td(status.responding)
+                                td node.nodeId
+                                td node.address
+                                td(status.responding ? "✔" : "✖")
                                 td((status.load * 100).round(2))
-                                td(status.lastSuccessfulCheck)
+                                td status.memory
+                                td status.lastSuccessfulCheck
                             }
                         }
                     }
