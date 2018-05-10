@@ -12,4 +12,12 @@ interface IMessagingService {
 	boolean sendNotificationGroups(String title, String body, List<IGroup> groups)
 	boolean sendNotificationUsers(String title, String body, List<IUser> users)
 	boolean sendNotificationDevices(String title, String body, List<IDevice> devices)
+
+    boolean sendMessage(IGroup group, Map data)
+    boolean sendMessage(IUser user, Map data)
+    boolean sendMessage(IDevice device, Map data)
+
+    boolean sendMessageGroups(List<IGroup> groups, Map data)
+    boolean sendMessageUsers(List<IUser> users, Map data)
+    boolean sendMessageDevices(List<IDevice> devices, Map data)
 }

@@ -73,4 +73,34 @@ class MessagingService implements IMessagingService {
 			sendNotification(title, body, it)
 		}
 	}
+
+	@Override
+	boolean sendMessage(IGroup group, Map data) {
+		return false
+	}
+
+	@Override
+	boolean sendMessage(IUser user, Map data) {
+		return false
+	}
+
+	@Override
+	boolean sendMessage(IDevice device, Map data) {
+		return false
+	}
+
+	@Override
+	boolean sendMessageGroups(List<IGroup> groups, Map data) {
+		return false
+	}
+
+	@Override
+	boolean sendMessageUsers(List<IUser> users, Map data) {
+		return false
+	}
+
+	@Override
+	boolean sendMessageDevices(List<IDevice> devices, Map data) {
+		return false
+	}
 }

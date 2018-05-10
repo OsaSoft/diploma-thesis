@@ -10,29 +10,34 @@ buildscript {
     }
 }
 
-group 'cz.cvut.fel.hernaosc.dp.msgr'
-version '0.0.1-SNAPSHOT'
-
 apply plugin: 'groovy'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
+group = 'cz.cvut.fel.hernaosc.dp.msgr'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
 repositories {
     mavenCentral()
 }
 
+
 dependencies {
-    compile('org.codehaus.groovy:groovy-all:2.4.13')
     compile('org.springframework.boot:spring-boot-starter-web')
-    compile("org.springframework.boot:spring-boot-starter-data-jpa")
-    compile 'mysql:mysql-connector-java'
+    compile('org.codehaus.groovy:groovy-all:2.4.13')
+
+    compile('org.springframework.boot:spring-boot-starter-websocket')
+    compile "org.codehaus.gpars:gpars:1.2.1"
 
     compile project(":core")
+    compile project(":websocket-common")
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
-    testCompile("com.h2database:h2")
     testCompile "org.spockframework:spock-core:1.1-groovy-2.4-rc-4"
     testCompile 'org.spockframework:spock-spring:1.1-groovy-2.4-rc-4'
+    testRuntime "net.bytebuddy:byte-buddy:1.6.5"          // allows mocking of classes (in addition to interfaces)
+    testRuntime "org.objenesis:objenesis:2.5.1" // allows mocking of classes without default constructor (together with CGLIB)
 }

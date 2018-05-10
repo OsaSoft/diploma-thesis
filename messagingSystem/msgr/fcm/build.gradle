@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    compile('org.codehaus.groovy:groovy:2.4.13')
+    compile('org.codehaus.groovy:groovy-all:2.4.13')
     compile('org.springframework.boot:spring-boot-starter-web')
 
     compile "us.raudi:pushraven:1.0.1"
