@@ -20,7 +20,6 @@ class NodeController {
     private List<MsgrNode> freeNodes
     private Date lastUpdate
 
-
     @RequestMapping(path = "/free-nodes", method = RequestMethod.GET)
     List<MsgrNode> getLeastLoadedNodes() {
         if (!(freeNodes && lastUpdate) || (new Date().time - lastUpdate.time > nodesUpdateTimeout * 1000)) {

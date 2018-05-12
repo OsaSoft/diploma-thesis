@@ -2,11 +2,13 @@ package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
+import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.DataMessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.websocket.controller.WsController
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
 import groovy.json.JsonException
 import groovy.json.JsonSlurper
@@ -21,6 +23,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
+@PlatformAdapter(WsController.PLATFORM_NAME)
 @Slf4j
 class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter {
 

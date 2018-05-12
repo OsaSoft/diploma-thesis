@@ -16,3 +16,6 @@ msgr.adapter.fcm.serviceAccountFilename=
 #msgr.node.address=
 # Address (including any port other than 80) for the Node Coordinator
 #msgr.coordinator.address=
+
+# number of seconds to cache list of least loaded nodes, default 5
+msgr.node.cache.time=
