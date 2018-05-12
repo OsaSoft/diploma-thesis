@@ -4,6 +4,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.IEntity
 import groovy.transform.ToString
 import org.hibernate.annotations.GenericGenerator
 
+import javax.persistence.Column
 import javax.persistence.GeneratedValue
 import javax.persistence.Id
 import javax.persistence.Inheritance
@@ -14,14 +15,10 @@ import javax.persistence.InheritanceType
 @ToString(includeNames = true, includePackage = false)
 abstract class Entity implements IEntity {
 	@Id
-	@GeneratedValue(generator = "uuid")
-	@GenericGenerator(name = "uuid", strategy = "uuid2")
+	@GeneratedValue(generator = "msgr-mysql-uuid")
+	@GenericGenerator(name = "msgr-mysql-uuid", strategy = "cz.cvut.fel.hernaosc.dp.msgr.mysql.db.MsgrMysqlUUIDGenerator")
 	String id
 	Date dateCreated = new Date()
-
-	String getId() {
-		return id
-	}
 
 	Date getDateCreated() {
 		return dateCreated

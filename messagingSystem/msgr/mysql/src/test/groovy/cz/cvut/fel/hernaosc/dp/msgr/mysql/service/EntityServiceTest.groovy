@@ -34,7 +34,7 @@ class EntityServiceTest extends ContextAwareTest {
     }
 
     @Unroll
-    def "can create and save new instances for #clazz"() {
+    def "Can create and save new instances for #clazz"() {
         given:
             def entity = entityService.create(params, clazz)
 
@@ -50,5 +50,48 @@ class EntityServiceTest extends ContextAwareTest {
             IDevice   | [token: "testDevice"]  | "device"
             IUser     | [name: "testUser"]     | "user"
             IGroup    | [name: "testGroup"]    | "group"
+    }
+
+    @Unroll
+    def "Params can be used to set ID when creating #clazz"() {
+        given:
+            def id = "test id for $clazz"
+
+        when:
+            def entity = entityService.create([id: id], clazz)
+        then:
+            entity.id == id
+
+        where:
+            clazz << [IDevice, IPlatform, IUser, IGroup]
+    }
+
+    def "FindOrCreate can find existing instance"() {
+        given:
+            def params = [id: "testId", name: "testName"]
+            def user = entityService.create(params, IUser)
+
+        expect:
+            entityService.findOrCreateById(params.id, IUser).id == params.id
+        and:
+            entityService.findOrCreateByName(params.name, IUser).name == params.name
+    }
+
+    def "FindOrCreate can create new if existing isnt found"() {
+        given:
+            def id = "test id"
+            def name = "test name"
+
+        when:
+            def byId = entityService.findOrCreateById(id, IUser)
+        then:
+            byId.id == id
+
+        when:
+            def byName = entityService.findOrCreateByName(name, IUser)
+        then:
+            byName.name == name
+        and:
+            byId != byName
     }
 }
