@@ -35,7 +35,7 @@ class RepositoryTest extends ContextAwareTest {
 		when:
 			repo.save(instance)
 		then:
-			repo.findById(instance.id)
+			repo.findById(instance.id).present
 
 		where:
 			repoName   | instance

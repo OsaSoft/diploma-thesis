@@ -36,20 +36,32 @@ class EntityService implements IEntityService {
     @Override
     IEntity findOrCreateById(String id, Class clazz, Map params = [:]) {
         def entity
-        params.id = id
+        if (id) params.id = id
 
         switch (clazz) {
             case IPlatform:
-                entity = MsgrUtils.fromOptional(platformRepository.findById(id)) ?: platformRepository.save(new Platform(params))
+                if (id) {
+                    entity = MsgrUtils.fromOptional(platformRepository.findById(id))
+                }
+                entity = entity ?: platformRepository.save(new Platform(params))
                 break
             case IDevice:
-                entity = MsgrUtils.fromOptional(deviceRepository.findById(id)) ?: deviceRepository.save(new Device(params))
+                if (id) {
+                    entity = MsgrUtils.fromOptional(deviceRepository.findById(id))
+                }
+                entity = entity ?: deviceRepository.save(new Device(params))
                 break
             case IUser:
-                entity = MsgrUtils.fromOptional(userRepository.findById(id)) ?: userRepository.save(new User(params))
+                if (id) {
+                    entity = MsgrUtils.fromOptional(userRepository.findById(id))
+                }
+                entity = entity ?: userRepository.save(new User(params))
                 break
             case IGroup:
-                entity = MsgrUtils.fromOptional(groupRepository.findById(id)) ?: groupRepository.save(new Group(params))
+                if (id) {
+                    entity = MsgrUtils.fromOptional(groupRepository.findById(id))
+                }
+                entity = entity ?: groupRepository.save(new Group(params))
                 break
             default:
                 throw new IllegalArgumentException("Improper type: '$clazz'")

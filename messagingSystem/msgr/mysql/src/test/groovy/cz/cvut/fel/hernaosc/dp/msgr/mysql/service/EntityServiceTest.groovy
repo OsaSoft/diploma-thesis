@@ -94,4 +94,21 @@ class EntityServiceTest extends ContextAwareTest {
         and:
             byId != byName
     }
+
+    @Unroll
+    def "FindOrCreate creates new instance if passed id is null"() {
+        when:
+            def entity = entityService.findOrCreateById(null, IPlatform)
+            def entity2 = entityService.findOrCreateById(null, IPlatform)
+        then:
+            entity
+            def e1 = platformRepository.findById(entity.id).get()
+            e1.id == entity.id
+        and:
+            entity2
+            def e2 = platformRepository.findById(entity2.id).get()
+            e2.id == entity2.id
+        and:
+            e1.id != e2.id
+    }
 }
