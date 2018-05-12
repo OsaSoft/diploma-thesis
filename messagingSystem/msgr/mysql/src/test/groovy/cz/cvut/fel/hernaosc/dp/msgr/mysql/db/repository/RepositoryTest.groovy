@@ -4,6 +4,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IGroupRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IPlatformRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.mysql.ContextAwareTest
 import cz.cvut.fel.hernaosc.dp.msgr.mysql.db.entities.Device
 import cz.cvut.fel.hernaosc.dp.msgr.mysql.db.entities.Group
@@ -34,7 +35,7 @@ class RepositoryTest extends ContextAwareTest {
 		when:
 			repo.save(instance)
 		then:
-			repo.findOne(instance.id)
+			repo.findById(instance.id)
 
 		where:
 			repoName   | instance
