@@ -7,15 +7,92 @@
     <script type="application/javascript" src="../msgr-client-js/msgr-client.js"></script>
 </head>
 <body>
-    <script type="application/javascript">
-        MSGR.deviceId = "test device";
-        MSGR.userId = "test user";
+<script type="application/javascript">
+    let notificationOk = false;
 
-        MSGR.onSuccess = function() {
-            console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
+    window.document.onload = () => {
+        if (!("Notification" in window)) {
+            alert("Notifications not supported in browser");
+        } else if (Notification.permission === "granted") {
+            notificationOk = true;
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission(function (permission) {
+                if (permission === "granted") {
+                    notificationOk = true;
+                }
+            });
+        }
+
+        document.getElementById("sendMsg").onclick = () => {
+            let device = document.getElementById("device").value;
+            let text = document.getElementById("messageArea").val();
+
+            //TODO
         };
+    };
 
-        MSGR.init();
-    </script>
+    function makeNotification(title, body) {
+        let params = {
+            body: body
+        };
+        return new Notification(title, params)
+    }
+
+    function appendToMessages(obj) {
+        let newLine = document.createElement("li");
+
+        let dateText = document.createTextNode(new Date().toLocaleString());
+        let dateElem = document.createElement("b");
+        dateElem.appendChild(dateText);
+
+        newLine.appendChild(dateElem);
+        newLine.appendChild(document.createTextNode(": " + obj));
+
+        document.getElementById("msgs").appendChild(newLine);
+    }
+
+    MSGR.deviceId = "test device";
+    MSGR.userId = "test user";
+
+    MSGR.onSuccess = () => {
+        console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
+        appendToMessages("Connected");
+    };
+
+    MSGR.onClose = () => {
+        appendToMessages("Disconnected (normally)");
+    };
+
+    MSGR.onFailure = () => {
+        appendToMessages("Disconnected (with error)");
+    };
+
+    MSGR.onNotification = (title, body) => {
+        appendToMessages(title + ": " + body);
+        if (notificationOk) {
+            let notification = makeNotification(title, body);
+        }
+    };
+
+    MSGR.onDataMessage = (payload) => {
+        appendToMessages(payload);
+    };
+
+    MSGR.init();
+</script>
+
+<h1>Chattr messages</h1>
+<ul id="msgs">
+</ul>
+
+<h2>Write a message:</h2>
+<span id="targetLabel">Device:</span><br/>
+<input id="device" type="text" title="Device" aria-labelledby="targetLabel"><br/>
+
+<span id="messageLabel">Message:</span><br/>
+<textarea id="messageArea" title="Message" aria-labelledby="messageLabel"></textarea><br/>
+
+<button id="sendMsg">Send</button>
+
 </body>
 </html>

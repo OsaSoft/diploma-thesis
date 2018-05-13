@@ -92,7 +92,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
         if (!session) return false
 
-        sendWsMessage session, [title: title, body: body, notification: true]
+        sendWsMessage session, [code: StatusCodes.WS_RECEIVED, title: title, body: body, notification: true]
     }
 
     @Override
@@ -103,7 +103,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
         if (!session) return false
 
-        sendWsMessage session, [payoad: payload, notification: false]
+        sendWsMessage session, [code: StatusCodes.WS_RECEIVED, payload: payload, notification: false]
     }
 
     private boolean forwardMessage(MessageDto message, String type) {

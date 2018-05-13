@@ -2,6 +2,11 @@ function randomElement(items) {
     return items[~~(items.length * Math.random())];
 }
 
+const WS_CONNECTED = 1;
+const WS_RECEIVED = 2;
+const WS_ERROR_SEND = 10;
+const WS_BAD_MESSAGE = 11;
+
 class MessageDto {
     constructor(targetGroups, targetUsers, targetDevices) {
         this.targetGroups = targetGroups;
@@ -67,17 +72,64 @@ class MsgrClient {
         this.setDeviceData(data);
 
         //TODO connect to websocket
-        // this.websocket = new WebSocket("http://" + randomElement(addresses) + "/ws/" + this.deviceId);
+        this.websocket = new WebSocket("ws://" + randomElement(addresses) + "/ws/" + this.deviceId);
 
-        this.connected = true;
-        this._onSuccess();
+        this.websocket.onopen = e => {
+            this.connected = true;
+        };
+
+        this.websocket.onclose = e => {
+            console.log("Connection was closed.");
+            console.log(e);
+
+            this.connected = false;
+            this.onClose();
+        };
+
+        this.websocket.onerror = e => {
+            console.log("Websocket error!");
+            console.log(e);
+
+            this.connected = false;
+            this.onFailure(e);
+        };
+
+        this.websocket.onmessage = e => this.onMessage(e);
+    }
+
+    onMessage(e) {
+        let data = JSON.parse(e.data);
+        console.log("Received message:");
+        console.log(data);
+
+        switch (data.code) {
+            case WS_CONNECTED:
+                this.onSuccess();
+                break;
+            case WS_RECEIVED:
+                if (data.notification) {
+                    this.onNotification(data.title, data.body);
+                } else {
+                    this.onDataMessage(data.payload);
+                }
+                break;
+            case WS_BAD_MESSAGE:
+                //TODO
+                break;
+            case WS_ERROR_SEND:
+                //TODO
+                break;
+            default:
+                console.log("Unknown ws message type " + data.code);
+                break;
+        }
     }
 
     onError(e) {
         console.log("Failed to initialize connection to server. Exception:");
         console.log(e);
         this.connected = false;
-        this._onFailure();
+        this.onFailure(e);
     }
 
     setDeviceData(data) {
@@ -87,56 +139,13 @@ class MsgrClient {
         this.userName = data.userName;
     }
 
-    sendMessage(messageDto) {
+    send(data) {
         if (this.connected) {
-
+            this.websocket.send(JSON.stringify(data));
+            return true;
+        } else {
+            return false;
         }
-    }
-
-    sendNotification(notificationDto) {
-        if (this.connected) {
-
-        }
-    }
-
-    set onFailure(onFailure) {
-        this._onFailure = onFailure;
-    }
-
-    set onSuccess(onSuccessFunc) {
-        this._onSuccess = onSuccessFunc;
-    }
-
-    set deviceId(deviceId) {
-        this._deviceId = deviceId;
-    }
-
-    get deviceId() {
-        return this._deviceId;
-    }
-
-    set deviceToken(deviceToken) {
-        this._deviceToken = deviceToken;
-    }
-
-    get deviceToken() {
-        return this._deviceToken;
-    }
-
-    set userId(userId) {
-        this._userId = userId;
-    }
-
-    get userId() {
-        return this._userId;
-    }
-
-    set userName(userName) {
-        this._userName = userName;
-    }
-
-    get userName() {
-        return this._userName;
     }
 }
 
