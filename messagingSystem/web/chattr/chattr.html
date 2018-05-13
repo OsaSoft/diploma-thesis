@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chattr</title>
+
+    <script type="application/javascript" src="../msgr-client-js/msgr-client.js"></script>
+</head>
+<body>
+    <script type="application/javascript">
+        MSGR.deviceId = "test device";
+        MSGR.userId = "test user";
+
+        MSGR.onSuccess = function() {
+            console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
+        };
+
+        MSGR.init();
+    </script>
+</body>
+</html>

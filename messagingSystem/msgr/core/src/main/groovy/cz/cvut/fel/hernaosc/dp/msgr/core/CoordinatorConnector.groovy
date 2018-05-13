@@ -94,7 +94,7 @@ class CoordinatorConnector {
             )
 
             if (response.status == HttpStatus.SC_OK) {
-                freeNodes = response.data.collectParallel { new MsgrNode(it) }
+                freeNodes = response.data.collect { new MsgrNode(it) }
                 log.debug "Received nodes: $freeNodes"
             } else {
                 throw new RuntimeException("Connection attempt returned status code $response.status")

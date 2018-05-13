@@ -15,3 +15,5 @@ messagingSystem/coordinator/common/out/
 messagingSystem/coordinator/gradle/wrapper/
 messagingSystem/msgr/websocket/out/
 messagingSystem/msgr/websocket-common/out/
+*.iml
+messagingSystem/web/.idea/

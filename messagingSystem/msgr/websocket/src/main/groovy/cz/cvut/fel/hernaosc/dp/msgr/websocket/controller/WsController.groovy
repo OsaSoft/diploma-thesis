@@ -36,6 +36,9 @@ class WsController {
                 user    : user
         ])
 
-        coordinatorConnector.leastLoadedNodes*.address
+        return [
+                addresses : coordinatorConnector.leastLoadedNodes*.address,
+                deviceData: new ConnectionRequest(userId: user.id, userName: user.name, deviceId: device.id, deviceToken: device.token)
+        ]
     }
 }
