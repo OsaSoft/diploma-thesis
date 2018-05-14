@@ -1,6 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
+import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
@@ -29,6 +30,9 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @Autowired
     private IMessagingService messagingService
+
+    @Autowired
+    private ISender<String, String> mqSender
 
     //maps deviceID to session
     private Map<String, WebSocketSession> sessions = [:] as ConcurrentHashMap
@@ -101,7 +105,12 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
         def session = sessions[device.id]
 
-        if (!session) return false
+        if (!session) {
+            log.debug "Device $device.id is not connected to this Node. Sending to Message Queue."
+
+            //mqSender.send("", "")
+            return true
+        }
 
         sendWsMessage session, [code: StatusCodes.WS_RECEIVED, payload: payload, notification: false]
     }

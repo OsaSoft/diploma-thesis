@@ -12,6 +12,7 @@ import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.TextMessage
 import java.util.concurrent.ConcurrentHashMap
+import java.util.function.Consumer
 
 @Component
 @Slf4j
@@ -22,10 +23,13 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 
     private Map<String, DefaultMessageListenerContainer> containers = [:] as ConcurrentHashMap
 
+    private Map<String, Consumer<String>> listeners = [:] as ConcurrentHashMap
+
     @Override
-    void subscribe(String... topics) {
+    void subscribe(List<String> topics, Consumer<String> listener) {
         GParsPool.withPool {
             topics.eachParallel { topic ->
+                listeners[topic] = listener
                 startListening(topic, new ActiveMqTopicListener(topic: topic, messageReceiver: this))
             }
         }
@@ -35,6 +39,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
     void unsubscribe(String... topics) {
         GParsPool.withPool {
             topics.eachParallel { topic ->
+                listeners.remove topic
                 stopListening topic
             }
         }
@@ -43,6 +48,14 @@ class ActiveMqReceiver implements IReceiver<String, String> {
     @Override
     void receiveMessage(String topic, String payload) {
         log.debug "Received message in topic '$topic'. Payload: $payload"
+
+        def listener = listeners[topic]
+        if (!listener) {
+            log.error "Received message in topic '$topic', but this topic has no listener assigned"
+            return
+        }
+
+        listener.accept(payload)
     }
 
     private void startListening(String topic, ActiveMqTopicListener listener) {
