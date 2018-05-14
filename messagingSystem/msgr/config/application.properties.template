@@ -19,3 +19,9 @@ msgr.adapter.fcm.serviceAccountFilename=
 
 # number of seconds to cache list of least loaded nodes, default 5
 msgr.node.cache.time=
+
+# MQ settings
+spring.activemq.broker-url=
+spring.activemq.user=
+spring.activemq.password=
+spring.jms.pub-sub-domain=true
