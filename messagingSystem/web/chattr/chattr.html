@@ -9,6 +9,15 @@
 <body>
 
 <h1>Chattr messages</h1>
+<span id="deviceIdLabel">Device:</span><br/>
+<input id="deviceId" type="text" title="Username" aria-labelledby="deviceIdLabel"><br/>
+<span id="usernameLabel">Username:</span><br/>
+<input id="username" type="text" title="Username" aria-labelledby="usernameLabel"><br/>
+<button id="connect">Connect</button>
+
+<h3 id="connected">Status: Disonnected</h3>
+
+<h2>Messages:</h2>
 <ul id="msgs">
 </ul>
 
@@ -36,12 +45,14 @@
         });
     }
 
-    document.getElementById("sendMsg").onclick = function () {
+    document.getElementById("sendMsg").onclick = () => {
         let device = document.getElementById("device").value;
         let text = document.getElementById("messageArea").value;
 
-        let message = new DataMessageDto({text: text}, null, null, [device]);
+        let message = new DataMessageDto({text: text, from: MSGR.userName}, null, null, [device], MSGR.deviceId, MSGR.userName);
         MSGR.send(message);
+
+        appendToMessages(MSGR.userName, text);
     };
 
     function makeNotification(title, body) {
@@ -51,47 +62,63 @@
         return new Notification(title, params)
     }
 
-    function appendToMessages(obj) {
+    function appendToMessages(sender, text) {
         let newLine = document.createElement("li");
 
-        let dateText = document.createTextNode(new Date().toLocaleString());
+        let dateText = document.createTextNode(new Date().toLocaleString() + " @" + sender);
         let dateElem = document.createElement("b");
         dateElem.appendChild(dateText);
 
         newLine.appendChild(dateElem);
-        newLine.appendChild(document.createTextNode(": " + obj));
+        newLine.appendChild(document.createTextNode(": " + text));
 
         document.getElementById("msgs").appendChild(newLine);
     }
 
-    MSGR.deviceId = "test device2";
-    MSGR.userId = "test user2";
+    document.getElementById("connect").onclick = () => {
+        document.getElementById("connected").textContent = "Status: Connecting...";
+        let deviceId = document.getElementById("deviceId");
+        deviceId.readOnly = true;
+        MSGR.deviceId = deviceId.value;
 
-    MSGR.onSuccess = () => {
-        console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
-        appendToMessages("Connected");
+        let username = document.getElementById("username");
+        username.readOnly = true;
+        MSGR.userName = username.value;
+
+        MSGR.onSuccess = () => {
+            console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
+            appendToMessages("Server", "Connected");
+            document.getElementById("connected").textContent = "Status: Connected";
+
+            deviceId.value = MSGR.deviceId;
+            username.value = MSGR.userName;
+        };
+
+        MSGR.onClose = () => {
+            appendToMessages("Disconnected");
+            document.getElementById("connected").textContent = "Status: Disconnected";
+            deviceId.readOnly = false;
+            username.readOnly = false;
+        };
+
+        MSGR.onFailure = () => {
+            appendToMessages("Error occured");
+            document.getElementById("connected").textContent = "Status: Disconnected";
+        };
+
+        MSGR.onNotification = (title, body) => {
+            appendToMessages(title + ": " + body);
+            if (notificationOk) {
+                let notification = makeNotification(title, body);
+            }
+        };
+
+        MSGR.onDataMessage = (payload) => {
+            appendToMessages(payload.from, payload.text);
+        };
+
+        MSGR.init();
     };
-
-    MSGR.onClose = () => {
-        appendToMessages("Disconnected (normally)");
-    };
-
-    MSGR.onFailure = () => {
-        appendToMessages("Disconnected (with error)");
-    };
-
-    MSGR.onNotification = (title, body) => {
-        appendToMessages(title + ": " + body);
-        if (notificationOk) {
-            let notification = makeNotification(title, body);
-        }
-    };
-
-    MSGR.onDataMessage = (payload) => {
-        appendToMessages(payload.text);
-    };
-
-    MSGR.init();
 </script>
 
 </body>

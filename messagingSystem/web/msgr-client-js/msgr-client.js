@@ -8,25 +8,27 @@ const WS_ERROR_SEND = 10;
 const WS_BAD_MESSAGE = 11;
 
 class MessageDto {
-    constructor(targetGroups, targetUsers, targetDevices) {
+    constructor(targetGroups, targetUsers, targetDevices, senderDeviceId, senderUsername) {
         this.targetGroups = targetGroups;
         this.targetUsers = targetUsers;
         this.targetDevices = targetDevices;
+        this.senderDeviceId = senderDeviceId;
+        this.senderUsername = senderUsername;
     }
 }
 
 class NotificationDto extends MessageDto {
-    constructor(title, body, targetGroups, targetUsers, targetDevices) {
-        super(targetGroups, targetUsers, targetDevices);
+    constructor(title, body, targetGroups, targetUsers, targetDevices, senderDeviceId, senderUsername) {
+        super(targetGroups, targetUsers, targetDevices, senderDeviceId, senderUsername);
         this.title = title;
         this.body = body;
     }
 }
 
 class DataMessageDto extends MessageDto {
-    constructor(content, targetGroups, targetUsers, targetDevices) {
-        super(targetGroups, targetUsers, targetDevices);
-        this.content = content
+    constructor(content, targetGroups, targetUsers, targetDevices, senderDeviceId, senderUsername) {
+        super(targetGroups, targetUsers, targetDevices, senderDeviceId, senderUsername);
+        this.content = content;
     }
 }
 
@@ -71,7 +73,6 @@ class MsgrClient {
 
         this.setDeviceData(data);
 
-        //TODO connect to websocket
         this.websocket = new WebSocket("ws://" + randomElement(addresses) + "/ws/" + this.deviceId);
 
         this.websocket.onopen = e => {

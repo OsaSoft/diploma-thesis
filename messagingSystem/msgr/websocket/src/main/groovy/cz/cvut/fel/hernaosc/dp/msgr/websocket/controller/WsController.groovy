@@ -4,6 +4,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.CoordinatorConnector
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.ConnectionRequest
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,6 +22,9 @@ class WsController {
     private String address
 
     @Autowired
+    private IDeviceRepository deviceRepository
+
+    @Autowired
     private IEntityService entityService
 
     @Autowired
@@ -30,15 +34,23 @@ class WsController {
     def connect(@RequestBody ConnectionRequest connectionRequest) {
         def platform = entityService.findOrCreateByName(PLATFORM_NAME, IPlatform)
 
-        def user = entityService.findOrCreateById(connectionRequest.userId, IUser, [
-                name: connectionRequest.userName ?: UUID.randomUUID().toString()
-        ])
+        def user
+
+        if (connectionRequest.userId) {
+            user = entityService.findOrCreateById(connectionRequest.userId, IUser, [
+                    name: connectionRequest.userName ?: UUID.randomUUID().toString()
+            ])
+        } else {
+            user = entityService.findOrCreateByName(connectionRequest.userName, IUser)
+        }
 
         def device = entityService.findOrCreateById(connectionRequest.deviceId, IDevice, [
                 platform: platform,
-                token   : connectionRequest.deviceToken ?: UUID.randomUUID().toString(),
-                user    : user
+                token   : connectionRequest.deviceToken ?: UUID.randomUUID().toString()
         ])
+
+        device.user = user
+        deviceRepository.save(device)
 
         return [
                 // if theres nothing in leastLoadedNodes return this node (probably not connected to Coordinator)
