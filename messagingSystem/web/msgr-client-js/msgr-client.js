@@ -141,7 +141,10 @@ class MsgrClient {
 
     send(data) {
         if (this.connected) {
-            this.websocket.send(JSON.stringify(data));
+            let message = {payload: data};
+            message.notification = message instanceof NotificationDto;
+
+            this.websocket.send(JSON.stringify(message));
             return true;
         } else {
             return false;

@@ -7,28 +7,41 @@
     <script type="application/javascript" src="../msgr-client-js/msgr-client.js"></script>
 </head>
 <body>
+
+<h1>Chattr messages</h1>
+<ul id="msgs">
+</ul>
+
+<h2>Write a message:</h2>
+<span id="targetLabel">Device:</span><br/>
+<input id="device" type="text" title="Device" aria-labelledby="targetLabel"><br/>
+
+<span id="messageLabel">Message:</span><br/>
+<textarea id="messageArea" title="Message" aria-labelledby="messageLabel"></textarea><br/>
+
+<button id="sendMsg">Send</button>
+
 <script type="application/javascript">
     let notificationOk = false;
 
-    window.document.onload = () => {
-        if (!("Notification" in window)) {
-            alert("Notifications not supported in browser");
-        } else if (Notification.permission === "granted") {
-            notificationOk = true;
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission(function (permission) {
-                if (permission === "granted") {
-                    notificationOk = true;
-                }
-            });
-        }
+    if (!("Notification" in window)) {
+        alert("Notifications not supported in browser");
+    } else if (Notification.permission === "granted") {
+        notificationOk = true;
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission(function (permission) {
+            if (permission === "granted") {
+                notificationOk = true;
+            }
+        });
+    }
 
-        document.getElementById("sendMsg").onclick = () => {
-            let device = document.getElementById("device").value;
-            let text = document.getElementById("messageArea").val();
+    document.getElementById("sendMsg").onclick = function () {
+        let device = document.getElementById("device").value;
+        let text = document.getElementById("messageArea").value;
 
-            //TODO
-        };
+        let message = new DataMessageDto({text: text}, null, null, [device]);
+        MSGR.send(message);
     };
 
     function makeNotification(title, body) {
@@ -51,8 +64,8 @@
         document.getElementById("msgs").appendChild(newLine);
     }
 
-    MSGR.deviceId = "test device";
-    MSGR.userId = "test user";
+    MSGR.deviceId = "test device2";
+    MSGR.userId = "test user2";
 
     MSGR.onSuccess = () => {
         console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
@@ -75,24 +88,11 @@
     };
 
     MSGR.onDataMessage = (payload) => {
-        appendToMessages(payload);
+        appendToMessages(payload.text);
     };
 
     MSGR.init();
 </script>
-
-<h1>Chattr messages</h1>
-<ul id="msgs">
-</ul>
-
-<h2>Write a message:</h2>
-<span id="targetLabel">Device:</span><br/>
-<input id="device" type="text" title="Device" aria-labelledby="targetLabel"><br/>
-
-<span id="messageLabel">Message:</span><br/>
-<textarea id="messageArea" title="Message" aria-labelledby="messageLabel"></textarea><br/>
-
-<button id="sendMsg">Send</button>
 
 </body>
 </html>

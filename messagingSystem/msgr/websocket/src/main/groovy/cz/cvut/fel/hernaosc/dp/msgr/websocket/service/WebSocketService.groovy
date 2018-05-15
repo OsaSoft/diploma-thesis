@@ -1,7 +1,8 @@
 package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
-import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
@@ -9,11 +10,11 @@ import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.DataMessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.NotificationDto
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.controller.WsController
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
 import groovy.json.JsonException
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.socket.CloseStatus
@@ -24,30 +25,57 @@ import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-@PlatformAdapter(WsController.PLATFORM_NAME)
+//@PlatformAdapter(WsController.PLATFORM_NAME)
+@PlatformAdapter("websocket")
 @Slf4j
 class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter {
+
+    @Autowired
+    private IDeviceRepository deviceRepository
 
     @Autowired
     private IMessagingService messagingService
 
     @Autowired
-    private ISender<String, String> mqSender
+    private IReceiver<String, String> mqReceiver
 
     //maps deviceID to session
     private Map<String, WebSocketSession> sessions = [:] as ConcurrentHashMap
+    private localDevices
 
     @Override
     void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         log.debug "Websocket connection session '${session?.id}' closed with status '$status.code:$status.reason'"
 
-        sessions.remove(getDeviceId(session))
+        def deviceId = getDeviceId(session)
+//TODO tests for this
+        sessions.remove(deviceId)
+        mqReceiver.unsubscribe(deviceId)
+
+        def device = deviceRepository.findById(deviceId)
+        if (device.present) {
+            device = device.get()
+            def userDeviceIds = device.user.devices*.id
+
+            def remainingDevices = false
+            GParsPool.withPool {
+                remainingDevices = userDeviceIds.anyParallel { sessions.containsKey(it) }
+            }
+
+            if (!remainingDevices) {
+                mqReceiver.unsubscribe(device.user.id)
+            }
+        }
     }
 
     @Override
     void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         log.error "Transport error on websocket session '${session?.id}', reason: $exception.message"
         log.trace "$exception.message", exception
+    }
+
+    private onMessageForDevice = { messageText ->
+        def message = parseMessage(messageText)
     }
 
     @Override
@@ -58,6 +86,13 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Websocket connection established. Session id: '$session.id'. Device id: '$deviceId'"
 
         sendWsMessage session, [status: "CONNECTED", code: StatusCodes.WS_CONNECTED]
+
+        def device = deviceRepository.findById(deviceId)
+        if (device.present) {
+            device = device.get()
+
+            mqReceiver.subscribe([deviceId, device.user.id], onMessageForDevice)
+        }
     }
 
     @Override
@@ -65,9 +100,24 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Message received in session '${session?.id}': $textMessage.payload"
 
         try {
-            def json = new JsonSlurper().parseText(textMessage.payload)
+            def message = parseMessage(textMessage.payload)
 
-            def message = json.notification ? new NotificationDto(json.payload) : new DataMessageDto(json.payload)
+            //TODO test for this
+            //check if any device is connected to this node
+            def localDevices = []
+            GParsPool.withPool {
+                localDevices = message.targetDevices.findAllParallel { sessions.containsKey(it) }
+            }
+
+            message.targetDevices.removeAll(localDevices)
+
+            Thread.start {
+                GParsPool.withPool {
+                    localDevices.eachParallel {
+                        message instanceof NotificationDto ? sendNotification(message.title, message.body, it) : sendMessage(message.content, it)
+                    }
+                }
+            }
 
             ["Groups", "Users", "Devices"].each { type ->
                 if (message."target$type") {
@@ -90,9 +140,13 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @Override
     boolean sendNotification(String title, String body, IDevice device) {
-        log.debug "Sending notification to device $device"
+        sendNotification(title, body, device.id)
+    }
 
-        def session = sessions[device.id]
+    boolean sendNotification(String title, String body, String deviceId) {
+        log.debug "Sending notification to device $deviceId"
+
+        def session = sessions[deviceId]
 
         if (!session) return false
 
@@ -101,12 +155,16 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @Override
     boolean sendMessage(Map payload, IDevice device) {
-        log.debug "Sending message to device $device"
+        sendMessage(payload, device.id)
+    }
 
-        def session = sessions[device.id]
+    boolean sendMessage(Map payload, String deviceId) {
+        log.debug "Sending message to device $deviceId"
+
+        def session = sessions[deviceId]
 
         if (!session) {
-            log.debug "Device $device.id is not connected to this Node. Sending to Message Queue."
+            log.debug "Device $deviceId is not connected to this Node. Sending to Message Queue."
 
             //mqSender.send("", "")
             return true
@@ -121,6 +179,26 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         } else {
             messagingService."sendMessage$type" message.targetGroups, message.content
         }
+    }
+
+    private MessageDto parseMessage(String messageText) {
+        def json = new JsonSlurper().parseText(messageText)
+        def payload = json.payload
+        def message
+
+        if (json.notification) {
+            message = new NotificationDto(title: payload.title, body: payload.body)
+        } else {
+            message = new DataMessageDto(content: payload.content)
+        }
+
+        message.with {
+            targetDevices = payload.targetDevices
+            targetUsers = payload.targetUsers
+            targetGroups = payload.targetGroups
+        }
+
+        message
     }
 
     private boolean sendWsMessage(WebSocketSession session, Map content) {
