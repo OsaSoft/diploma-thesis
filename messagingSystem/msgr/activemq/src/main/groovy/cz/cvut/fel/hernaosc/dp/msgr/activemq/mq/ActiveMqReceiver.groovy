@@ -12,7 +12,7 @@ import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.TextMessage
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.Consumer
+import java.util.function.BiConsumer
 
 @Component
 @Slf4j
@@ -23,10 +23,10 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 
     private Map<String, DefaultMessageListenerContainer> containers = [:] as ConcurrentHashMap
 
-    private Map<String, Consumer<String>> listeners = [:] as ConcurrentHashMap
+    private Map<String, BiConsumer<String, String>> listeners = [:] as ConcurrentHashMap
 
     @Override
-    void subscribe(List<String> topics, Consumer<String> listener) {
+    void subscribe(List<String> topics, boolean isQueue = false, BiConsumer<String, String> listener) {
         GParsPool.withPool {
             topics.eachParallel { topic ->
                 listeners[topic] = listener
@@ -36,7 +36,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
     }
 
     @Override
-    void unsubscribe(String... topics) {
+    void unsubscribe(List<String> topics) {
         GParsPool.withPool {
             topics.eachParallel { topic ->
                 listeners.remove topic
@@ -55,10 +55,10 @@ class ActiveMqReceiver implements IReceiver<String, String> {
             return
         }
 
-        listener.accept(payload)
+        listener.accept(topic, payload)
     }
 
-    private void startListening(String topic, ActiveMqTopicListener listener) {
+    private void startListening(String topic, ActiveMqTopicListener listener, boolean isQueue = false) {
         log.debug "Subscribing to topic '$topic'"
 
         if (containers[topic]) {
@@ -68,7 +68,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 
         def container = new DefaultMessageListenerContainer(
                 connectionFactory: connectionFactory,
-                pubSubDomain: true,
+                pubSubDomain: !isQueue,
                 messageListener: listener,
                 destinationName: topic
         )

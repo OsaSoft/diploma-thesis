@@ -1,4 +1,4 @@
-package cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message
+package cz.cvut.fel.hernaosc.dp.msgr.core.dto.message
 
 abstract class MessageDto {
     List<String> targetDevices

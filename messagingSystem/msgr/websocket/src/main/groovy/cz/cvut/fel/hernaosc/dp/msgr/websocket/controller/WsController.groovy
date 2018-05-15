@@ -5,6 +5,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.ConnectionRequest
 import org.springframework.beans.factory.annotation.Autowired

@@ -24,4 +24,3 @@ msgr.node.cache.time=
 spring.activemq.broker-url=
 spring.activemq.user=
 spring.activemq.password=
-spring.jms.pub-sub-domain=true

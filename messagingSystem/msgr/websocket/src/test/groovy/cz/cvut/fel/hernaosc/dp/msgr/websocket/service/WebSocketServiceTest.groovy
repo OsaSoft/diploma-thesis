@@ -1,8 +1,8 @@
 package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.DataMessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import groovy.json.JsonBuilder
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage

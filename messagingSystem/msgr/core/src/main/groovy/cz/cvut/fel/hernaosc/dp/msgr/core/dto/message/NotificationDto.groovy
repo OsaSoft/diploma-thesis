@@ -1,4 +1,4 @@
-package cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message
+package cz.cvut.fel.hernaosc.dp.msgr.core.dto.message
 
 class NotificationDto extends MessageDto {
     String title

@@ -12,23 +12,31 @@ import javax.persistence.OneToMany
 @javax.persistence.Entity
 @ToString(includeNames = true, includePackage = false, includeSuper = true)
 class Platform extends Entity implements IPlatform {
-	/**
-	 * IPlatform name
-	 */
-	@Column(unique = true)
-	String name
-	//TODO: String adapter class name? Use convention instead, ie, try to find a "NameAdaptor"?
+    /**
+     * IPlatform name
+     */
+    @Column(unique = true)
+    String name
+    //TODO: String adapter class name? Use convention instead, ie, try to find a "NameAdaptor"?
 
-	@OneToMany(mappedBy = "platform", cascade = CascadeType.ALL, orphanRemoval = true)
-	List<Device> devices = []
+    @OneToMany(mappedBy = "platform", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Device> devices = []
 
-	@Override
-	void setDevices(List<IDevice> devices) {
-		this.devices = devices.collect { (Device) it }
-	}
+    @Override
+    void setDevices(List<IDevice> devices) {
+        this.devices = devices.collect { (Device) it }
+    }
 
-	@Override
-	void addDevice(IDevice device) {
-		devices << (Device) device
-	}
+    @Override
+    void addDevice(IDevice device) {
+        devices << (Device) device
+    }
+
+    @Override
+    String toString() {
+        return "Platform{" +
+                "name='" + name + '\'' +
+                ", devices=" + devices*.id +
+                '}'
+    }
 }

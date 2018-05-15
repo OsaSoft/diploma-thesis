@@ -1,18 +1,24 @@
 package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.MessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
+import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
+import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
+import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.DataMessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.MessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.websocket.controller.WsController
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
+import groovy.json.JsonBuilder
 import groovy.json.JsonException
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +28,7 @@ import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 
+import javax.annotation.PostConstruct
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
@@ -37,11 +44,22 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
     private IMessagingService messagingService
 
     @Autowired
+    private IEntityService entityService
+
+    @Autowired
     private IReceiver<String, String> mqReceiver
+
+    @Autowired
+    private ISender<String, String> mqSender
 
     //maps deviceID to session
     private Map<String, WebSocketSession> sessions = [:] as ConcurrentHashMap
     private localDevices
+
+    @PostConstruct
+    void init() {
+        entityService.findOrCreateByName(WsController.PLATFORM_NAME, IPlatform)
+    }
 
     @Override
     void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
@@ -50,7 +68,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         def deviceId = getDeviceId(session)
 //TODO tests for this
         sessions.remove(deviceId)
-        mqReceiver.unsubscribe(deviceId)
+        mqReceiver.unsubscribe([deviceId])
 
         def device = deviceRepository.findById(deviceId)
         if (device.present) {
@@ -63,7 +81,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
             }
 
             if (!remainingDevices) {
-                mqReceiver.unsubscribe(device.user.id)
+                mqReceiver.unsubscribe(["u.$device.user.id"])
             }
         }
     }
@@ -74,8 +92,26 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.trace "$exception.message", exception
     }
 
-    private onMessageForDevice = { messageText ->
-        def message = parseMessage(messageText)
+    private onMessageForDevice = { String topic, messageText ->
+        def message = MsgrUtils.parseMessageFromJson(messageText)
+        def localDevices = []
+
+        if (topic.startsWith("u.")) {
+            def userId = topic.substring(2)
+
+            def deviceIds = deviceRepository.findAllByUserIdAndPlatformName(userId, WsController.PLATFORM_NAME)*.id
+            GParsPool.withPool {
+                localDevices = deviceIds.findAllParallel { sessions.containsKey(it) }
+            }
+        } else {
+            localDevices << topic
+        }
+
+        GParsPool.withPool {
+            localDevices.eachParallel {
+                message instanceof NotificationDto ? sendNotification(message.title, message.body, it) : sendMessage(message.content, it)
+            }
+        }
     }
 
     @Override
@@ -91,7 +127,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         if (device.present) {
             device = device.get()
 
-            mqReceiver.subscribe([deviceId, device.user.id], onMessageForDevice)
+            mqReceiver.subscribe([deviceId, "u.$device.user.id"], onMessageForDevice)
         }
     }
 
@@ -100,16 +136,16 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Message received in session '${session?.id}': $textMessage.payload"
 
         try {
-            def message = parseMessage(textMessage.payload)
+            def message = MsgrUtils.parseMessageFromJson(textMessage.payload)
 
             //TODO test for this
             //check if any device is connected to this node
             def localDevices = []
             GParsPool.withPool {
-                localDevices = message.targetDevices.findAllParallel { sessions.containsKey(it) }
+                localDevices = message.targetDevices?.findAllParallel { sessions.containsKey(it) }
             }
 
-            message.targetDevices.removeAll(localDevices)
+            message.targetDevices?.removeAll(localDevices)
 
             Thread.start {
                 GParsPool.withPool {
@@ -166,7 +202,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         if (!session) {
             log.debug "Device $deviceId is not connected to this Node. Sending to Message Queue."
 
-            //mqSender.send("", "")
+            mqSender.send([deviceId], new JsonBuilder(new DataMessageDto(content: payload)).toString())
             return true
         }
 
@@ -175,30 +211,10 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     private boolean forwardMessage(MessageDto message, String type) {
         if (message instanceof NotificationDto) {
-            messagingService."sendNotification$type"(message.title, message.body, message."target$type")
+            messagingService."sendNotification${type}Ids"(message.title, message.body, message."target$type")
         } else {
-            messagingService."sendMessage$type" message.targetGroups, message.content
+            messagingService."sendMessage${type}Ids"(message."target$type", message.content)
         }
-    }
-
-    private MessageDto parseMessage(String messageText) {
-        def json = new JsonSlurper().parseText(messageText)
-        def payload = json.payload
-        def message
-
-        if (json.notification) {
-            message = new NotificationDto(title: payload.title, body: payload.body)
-        } else {
-            message = new DataMessageDto(content: payload.content)
-        }
-
-        message.with {
-            targetDevices = payload.targetDevices
-            targetUsers = payload.targetUsers
-            targetGroups = payload.targetGroups
-        }
-
-        message
     }
 
     private boolean sendWsMessage(WebSocketSession session, Map content) {

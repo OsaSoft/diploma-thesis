@@ -22,8 +22,14 @@
 </ul>
 
 <h2>Write a message:</h2>
-<span id="targetLabel">Device:</span><br/>
-<input id="device" type="text" title="Device" aria-labelledby="targetLabel"><br/>
+
+<span id="targetTypeLabel">Target Type:</span><br/>
+<select id="targetType" title="Target" aria-labelledby="targetLabel">
+    <option value="device">Device</option>
+    <option value="user">User</option>
+</select><br/>
+<span id="targetLabel">Target:</span><br/>
+<input id="target" type="text" title="Target" aria-labelledby="targetLabel"><br/>
 
 <span id="messageLabel">Message:</span><br/>
 <textarea id="messageArea" title="Message" aria-labelledby="messageLabel"></textarea><br/>
@@ -46,10 +52,19 @@
     }
 
     document.getElementById("sendMsg").onclick = () => {
-        let device = document.getElementById("device").value;
+        let targetType = document.getElementById("targetType").value;
+        let target = document.getElementById("target").value;
         let text = document.getElementById("messageArea").value;
 
-        let message = new DataMessageDto({text: text, from: MSGR.userName}, null, null, [device], MSGR.deviceId, MSGR.userName);
+        let message = new DataMessageDto({text: text, from: MSGR.userName}, null, null, null, MSGR.deviceId, MSGR.userName);
+        switch (targetType) {
+            case "device":
+                message.targetDevices = [target];
+                break;
+            case "user":
+                message.targetUsers = [target];
+                break;
+        }
         MSGR.send(message);
 
         appendToMessages(MSGR.userName, text);
@@ -95,14 +110,14 @@
         };
 
         MSGR.onClose = () => {
-            appendToMessages("Disconnected");
+            appendToMessages("Server", "Disconnected");
             document.getElementById("connected").textContent = "Status: Disconnected";
             deviceId.readOnly = false;
             username.readOnly = false;
         };
 
         MSGR.onFailure = () => {
-            appendToMessages("Error occured");
+            appendToMessages("Server", "Error occured");
             document.getElementById("connected").textContent = "Status: Disconnected";
         };
 

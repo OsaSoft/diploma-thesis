@@ -7,4 +7,6 @@ interface IDeviceRepository extends IBaseRepository<IDevice> {
     List<IDevice> findByUser(IUser user)
 
     IDevice findByToken(String token)
+
+    List<IDevice> findAllByUserIdAndPlatformName(String userId, String platformName)
 }

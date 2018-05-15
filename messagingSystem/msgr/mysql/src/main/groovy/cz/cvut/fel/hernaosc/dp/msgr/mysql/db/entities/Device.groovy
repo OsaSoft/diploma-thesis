@@ -12,28 +12,36 @@ import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 
 @javax.persistence.Entity
-@ToString(includeNames = true, includePackage = false, includeSuper = true)
 class Device extends Entity implements IDevice {
-	@Column(unique = true)
-	String token
+    @Column(unique = true)
+    String token
 
-	//eager fetching since most of the time, getting a device we will also want to know the platform
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "platform_id")
-	Platform platform
+    //eager fetching since most of the time, getting a device we will also want to know the platform
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "platform_id")
+    Platform platform
 
-	@ManyToOne
-	@JoinColumn(name = "user_id")
-	User user
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    User user
 
-	@Override
-	void setPlatform(IPlatform platform) {
-		this.platform = (Platform) platform
-	}
+    @Override
+    void setPlatform(IPlatform platform) {
+        this.platform = (Platform) platform
+    }
 
-	@Override
-	void setUser(IUser user) {
-		this.user = (User) user
-	}
+    @Override
+    void setUser(IUser user) {
+        this.user = (User) user
+    }
+
+    @Override
+    String toString() {
+        return "Device{" +
+                "token='" + token + '\'' +
+                ", platform=" + platform.name +
+                ", user=" + user.id +
+                '}'
+    }
 }
 
