@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jms.listener.DefaultMessageListenerContainer
 import org.springframework.stereotype.Component
 
-import javax.jms.ConnectionFactory
-import javax.jms.Message
-import javax.jms.MessageListener
-import javax.jms.TextMessage
+import javax.jms.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiConsumer
 
@@ -30,7 +27,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
         GParsPool.withPool {
             topics.eachParallel { topic ->
                 listeners[topic] = listener
-                startListening(topic, new ActiveMqTopicListener(topic: topic, messageReceiver: this))
+                startListening(topic, new ActiveMqTopicListener(isQueue: isQueue, messageReceiver: this))
             }
         }
     }
@@ -49,16 +46,28 @@ class ActiveMqReceiver implements IReceiver<String, String> {
     void receiveMessage(String topic, String payload) {
         log.debug "Received message in topic '$topic'. Payload: $payload"
 
-        def listener = listeners[topic]
+        def genericTopic = convertToGenericTopic(topic)
+
+        def listener = listeners[genericTopic]
         if (!listener) {
-            log.error "Received message in topic '$topic', but this topic has no listener assigned"
+            log.error "Received message in topic '$topic', but this topic has no listener assigned to general topic '$genericTopic'"
             return
         }
 
         listener.accept(topic, payload)
     }
 
-    private void startListening(String topic, ActiveMqTopicListener listener, boolean isQueue = false) {
+    private String convertToGenericTopic(String topic) {
+        def genericTopic = topic
+
+        if (topic.startsWith("q.")) {
+            genericTopic = genericTopic.take(topic.lastIndexOf(".")) + ".*"
+        }
+
+        genericTopic
+    }
+
+    private void startListening(String topic, ActiveMqTopicListener listener) {
         log.debug "Subscribing to topic '$topic'"
 
         if (containers[topic]) {
@@ -68,7 +77,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 
         def container = new DefaultMessageListenerContainer(
                 connectionFactory: connectionFactory,
-                pubSubDomain: !isQueue,
+                pubSubDomain: !listener.isQueue,
                 messageListener: listener,
                 destinationName: topic
         )
@@ -94,11 +103,24 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 }
 
 class ActiveMqTopicListener implements MessageListener {
-    String topic
+    boolean isQueue
     IReceiver<String, String> messageReceiver
 
     @Override
     void onMessage(Message message) {
-        messageReceiver.receiveMessage(topic, ((TextMessage) message).text)
+        def topicName
+        def destination = message.JMSDestination
+        switch (destination) {
+            case Topic:
+                topicName = destination.topicName
+                break
+            case Queue:
+                topicName = destination.queueName
+                break
+            default:
+                return
+        }
+
+        messageReceiver.receiveMessage(topicName, ((TextMessage) message).text)
     }
 }

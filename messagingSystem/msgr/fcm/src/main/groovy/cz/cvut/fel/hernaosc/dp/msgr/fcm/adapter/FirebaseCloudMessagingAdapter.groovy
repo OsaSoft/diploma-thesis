@@ -61,7 +61,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 
         entityService.findOrCreateByName(PLATFORM_NAME, IPlatform)
 
-        mqReceiver.subscribe([PLATFORM_NAME], true, onMessageForDevice)
+        mqReceiver.subscribe([platformQueueName], true, onMessageForDevice)
     }
 
     private onMessageForDevice = { String topic, messageText ->
@@ -106,5 +106,9 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
         FcmResponse response = Pushraven.push(msg)
         log.debug "Received response $response"
         true
+    }
+
+    String getPlatformQueueName() {
+        PLATFORM_NAME
     }
 }

@@ -13,7 +13,8 @@
 <input id="deviceId" type="text" title="Username" aria-labelledby="deviceIdLabel"><br/>
 <span id="usernameLabel">Username:</span><br/>
 <input id="username" type="text" title="Username" aria-labelledby="usernameLabel"><br/>
-<button id="connect">Connect</button>
+<button id="connect">Connect</button><br/>
+<span id="userIdLabel" style="color: gray">User id:</span> <span id="userId" style="color: gray"></span>
 
 <h3 id="connected">Status: Disonnected</h3>
 
@@ -27,6 +28,7 @@
 <select id="targetType" title="Target" aria-labelledby="targetLabel">
     <option value="device">Device</option>
     <option value="user">User</option>
+    <option value="group">Group</option>
 </select><br/>
 <span id="targetLabel">Target:</span><br/>
 <input id="target" type="text" title="Target" aria-labelledby="targetLabel"><br/>
@@ -63,6 +65,9 @@
                 break;
             case "user":
                 message.targetUsers = [target];
+                break;
+            case "group":
+                message.targetGroups = [target];
                 break;
         }
         MSGR.send(message);
@@ -104,6 +109,7 @@
             console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
             appendToMessages("Server", "Connected");
             document.getElementById("connected").textContent = "Status: Connected";
+            document.getElementById("userId").textContent = MSGR.userId ;
 
             deviceId.value = MSGR.deviceId;
             username.value = MSGR.userName;
@@ -122,13 +128,16 @@
         };
 
         MSGR.onNotification = (title, body) => {
-            appendToMessages(title + ": " + body);
+            appendToMessages("Server", title + ": " + body);
             if (notificationOk) {
                 let notification = makeNotification(title, body);
             }
         };
 
         MSGR.onDataMessage = (payload) => {
+            if (payload.text.includes(MSGR.userName)) {
+                MSGR.onNotification("You were mentioned!", payload.from + " mentioned you in a message!");
+            }
             appendToMessages(payload.from, payload.text);
         };
 

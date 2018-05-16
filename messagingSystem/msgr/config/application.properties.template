@@ -20,6 +20,9 @@ msgr.adapter.fcm.serviceAccountFilename=
 # number of seconds to cache list of least loaded nodes, default 5
 msgr.node.cache.time=
 
+# number of users to include in a page when breaking down group, default 50
+msgr.group.user.page.size=
+
 # MQ settings
 spring.activemq.broker-url=
 spring.activemq.user=

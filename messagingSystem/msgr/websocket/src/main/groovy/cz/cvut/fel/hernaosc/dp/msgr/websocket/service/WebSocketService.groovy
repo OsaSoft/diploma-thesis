@@ -3,8 +3,6 @@ package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
-import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
@@ -17,7 +15,6 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.controller.WsController
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
-import groovy.json.JsonBuilder
 import groovy.json.JsonException
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
@@ -66,24 +63,8 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Websocket connection session '${session?.id}' closed with status '$status.code:$status.reason'"
 
         def deviceId = getDeviceId(session)
-//TODO tests for this
         sessions.remove(deviceId)
-        mqReceiver.unsubscribe([deviceId])
-
-        def device = deviceRepository.findById(deviceId)
-        if (device.present) {
-            device = device.get()
-            def userDeviceIds = device.user.devices*.id
-
-            def remainingDevices = false
-            GParsPool.withPool {
-                remainingDevices = userDeviceIds.anyParallel { sessions.containsKey(it) }
-            }
-
-            if (!remainingDevices) {
-                mqReceiver.unsubscribe(["u.$device.user.id"])
-            }
-        }
+        mqReceiver.unsubscribe(["${platformQueueName}.$deviceId"])
     }
 
     @Override
@@ -92,26 +73,11 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.trace "$exception.message", exception
     }
 
-    private onMessageForDevice = { String topic, messageText ->
+    private onMessageForDevice = { String topic, String messageText ->
         def message = MsgrUtils.parseMessageFromJson(messageText)
-        def localDevices = []
+        def deviceId = topic - "${platformQueueName}."
 
-        if (topic.startsWith("u.")) {
-            def userId = topic.substring(2)
-
-            def deviceIds = deviceRepository.findAllByUserIdAndPlatformName(userId, WsController.PLATFORM_NAME)*.id
-            GParsPool.withPool {
-                localDevices = deviceIds.findAllParallel { sessions.containsKey(it) }
-            }
-        } else {
-            localDevices << topic
-        }
-
-        GParsPool.withPool {
-            localDevices.eachParallel {
-                message instanceof NotificationDto ? sendNotification(message.title, message.body, it) : sendMessage(message.content, it)
-            }
-        }
+        message instanceof NotificationDto ? sendNotification(message.title, message.body, deviceId) : sendMessage(message.content, deviceId)
     }
 
     @Override
@@ -122,13 +88,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Websocket connection established. Session id: '$session.id'. Device id: '$deviceId'"
 
         sendWsMessage session, [status: "CONNECTED", code: StatusCodes.WS_CONNECTED]
-
-        def device = deviceRepository.findById(deviceId)
-        if (device.present) {
-            device = device.get()
-
-            mqReceiver.subscribe([deviceId, "u.$device.user.id"], onMessageForDevice)
-        }
+        mqReceiver.subscribe(["$platformQueueName.$deviceId"], onMessageForDevice)
     }
 
     @Override
@@ -184,7 +144,10 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
         def session = sessions[deviceId]
 
-        if (!session) return false
+        if (!session) {
+            log.debug "Device $deviceId is not connected to this Node."
+            return true
+        }
 
         sendWsMessage session, [code: StatusCodes.WS_RECEIVED, title: title, body: body, notification: true]
     }
@@ -200,9 +163,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         def session = sessions[deviceId]
 
         if (!session) {
-            log.debug "Device $deviceId is not connected to this Node. Sending to Message Queue."
-
-            mqSender.send([deviceId], new JsonBuilder(new DataMessageDto(content: payload)).toString())
+            log.debug "Device $deviceId is not connected to this Node."
             return true
         }
 
@@ -237,5 +198,9 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
     private String getDeviceId(WebSocketSession session) {
         //path example /ws/device123
         session.uri.path.split("/")[2]
+    }
+
+    String getPlatformQueueName() {
+        WsController.PLATFORM_NAME
     }
 }

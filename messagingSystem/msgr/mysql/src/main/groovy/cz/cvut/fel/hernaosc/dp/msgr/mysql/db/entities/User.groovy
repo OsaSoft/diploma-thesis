@@ -4,7 +4,6 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IGroup
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
 import cz.cvut.fel.hernaosc.dp.msgr.mysql.db.Entity
-import org.hibernate.annotations.NamedQuery
 
 import javax.persistence.CascadeType
 import javax.persistence.Column
@@ -12,8 +11,6 @@ import javax.persistence.ManyToMany
 import javax.persistence.OneToMany
 
 @javax.persistence.Entity
-@NamedQuery(name = "User.getUserIdsByGroup",
-        query = "SELECT u.id FROM Group g JOIN g.users u where g.id = ?1")
 class User extends Entity implements IUser {
     @Column(unique = true)
     String name

@@ -1,32 +1,29 @@
 package cz.cvut.fel.hernaosc.dp.msgr.activemq.mq
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
+import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jms.core.JmsTemplate
 import org.springframework.stereotype.Component
 
-import javax.annotation.PostConstruct
-
 @Component
+@Slf4j
 class ActiveMqSender implements ISender<String, String> {
 
     @Autowired
-    private JmsTemplate jmsTemplate
+    private JmsTemplate queueJmsTemplate
 
-    @PostConstruct
-    void init() {
-        jmsTemplate.with {
-            pubSubDomain = true
-            deliveryPersistent = true
-        }
-    }
+    @Autowired
+    private JmsTemplate topicJmsTemplate
 
     @Override
-    void send(List<String> topics, String payload) {
+    void send(List<String> topics, String payload, boolean isQueue = false) {
+        log.debug "Sending message to ${isQueue ? 'queues' : 'topics'} '$topics'. Payload: $payload"
+
         GParsPool.withPool {
             topics.eachParallel { String topic ->
-                jmsTemplate.convertAndSend(topic, payload)
+                isQueue ? queueJmsTemplate.convertAndSend(topic, payload) : topicJmsTemplate.convertAndSend(topic, payload)
             }
         }
     }

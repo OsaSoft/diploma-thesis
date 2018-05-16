@@ -4,8 +4,10 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IGroup
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
@@ -13,14 +15,21 @@ import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 @Slf4j
 class MessagingService implements IMessagingService {
 
+    @Value('${msgr.group.user.page.size:#{50}}')
+    private int pageSize = 50
+
     @Autowired
     private IUserRepository userRepository
+
+    @Autowired
+    private IDeviceRepository deviceRepository
 
     @Autowired
     private AdapterService adapterService
@@ -88,62 +97,77 @@ class MessagingService implements IMessagingService {
         }
     }
 
-    @Override
-    boolean sendNotificationGroupsIds(String title, String body, List<String> groupIds) {
-        def rv
+    private int numPages(long count) {
+        count.intdiv(pageSize) + (count % pageSize == 0 ? 0 : 1)
+    }
+
+    private void sendPageMessages(List<String> groupIds, MessageDto message) {
         GParsPool.withPool {
-            rv = groupIds.everyParallel {
-                def userIds = userRepository.getUserIdsByGroup(it)
-                sendNotificationUsersIds(title, body, userIds)
+            groupIds.eachParallel { groupId ->
+                int page = 0
+                numPages(userRepository.countByGroups_Id(groupId)).times {
+                    def payload = [page: page++, msg: message, notification: message instanceof NotificationDto]
+                    mqSender.send(["q.group.$groupId"], new JsonBuilder(payload).toString(), true)
+                }
             }
         }
-        rv
+    }
+
+    @Override
+    boolean sendNotificationGroupsIds(String title, String body, List<String> groupIds) {
+        sendPageMessages(groupIds, new NotificationDto(title: title, body: body))
+        true
     }
 
     @Override
     boolean sendNotificationUsersIds(String title, String body, List<String> userIds) {
         def topics
         GParsPool.withPool {
-            topics = userIds.collectParallel { "u.$it" }
+            topics = userIds.collectParallel { "q.user.$it" }
         }
 
-        mqSender.send(topics, new JsonBuilder(new NotificationDto(title: title, body: body)).toString())
+        mqSender.send(topics, new JsonBuilder([payload: new NotificationDto(title: title, body: body), notification: true]).toString(), true)
         true
     }
 
     @Override
     boolean sendNotificationDevicesIds(String title, String body, List<String> deviceIds) {
-        mqSender.send(deviceIds, new JsonBuilder(new NotificationDto(title: title, body: body)).toString())
+        def devices = deviceRepository.findAllById(deviceIds)
+
+        GParsPool.withPool {
+            devices.eachParallel { device ->
+                mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload:  new NotificationDto(title: title, body: body), notification: true] ).toString())
+            }
+        }
         true
     }
 
     @Override
     boolean sendMessageGroupsIds(List<String> groupIds, Map data) {
-        def rv
-        GParsPool.withPool {
-            rv = groupIds.everyParallel {
-                def userIds = userRepository.getUserIdsByGroup(it)
-                sendMessageUsersIds(userIds, data)
-            }
-        }
-        rv
+        sendPageMessages(groupIds, new DataMessageDto(content: data))
+        true
     }
 
     @Override
     boolean sendMessageUsersIds(List<String> userIds, Map data) {
         def topics
         GParsPool.withPool {
-            topics = userIds.collectParallel { "u.$it" }
+            topics = userIds.collectParallel { "q.user.$it" }
         }
 
-        //TODO this works for binded sessions (such as WS), but we need to separate this by platform to get it into different queues
-        mqSender.send(topics, new JsonBuilder(new DataMessageDto(content: data)).toString())
+        mqSender.send(topics, new JsonBuilder([payload: new DataMessageDto(content: data), notification: false] ).toString(), true)
         true
     }
 
     @Override
     boolean sendMessageDevicesIds(List<String> deviceIds, Map data) {
-        mqSender.send(deviceIds, new JsonBuilder(new DataMessageDto(content: data)).toString())
+        def devices = deviceRepository.findAllById(deviceIds)
+
+        GParsPool.withPool {
+            devices.eachParallel { device ->
+                mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new DataMessageDto(content: data), notification: false] ).toString())
+            }
+        }
         true
     }
 
