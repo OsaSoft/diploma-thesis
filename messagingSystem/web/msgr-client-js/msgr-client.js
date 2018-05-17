@@ -63,6 +63,12 @@ class MsgrClient {
         restReq.send(JSON.stringify(request));
     }
 
+    disconnect() {
+        if(this.connected) {
+            this.websocket.close();
+        }
+    }
+
     onConnect(e) {
         let json = JSON.parse(e.target.response);
         let addresses = json.addresses;
@@ -73,7 +79,8 @@ class MsgrClient {
 
         this.setDeviceData(data);
 
-        this.websocket = new WebSocket("ws://" + randomElement(addresses) + "/ws/" + this.deviceId);
+        this.nodeAddress = randomElement(addresses);
+        this.websocket = new WebSocket("ws://" + this.nodeAddress + "/ws/" + this.deviceId);
 
         this.websocket.onopen = e => {
             this.connected = true;

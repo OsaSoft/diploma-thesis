@@ -85,6 +85,7 @@ class NodeController {
                             th "CPU Load (%)"
                             th "Free Memory (%)"
                             th "Last Succesful Check"
+                            th "More"
                         }
                     }
                     tbody {
@@ -96,6 +97,9 @@ class NodeController {
                                 td((status.load * 100).round(2))
                                 td status.memory
                                 td status.lastSuccessfulCheck
+                                td {
+                                    a(href: "http://$node.address/stats", target: "_blank", "🔍")
+                                }
                             }
                         }
                     }

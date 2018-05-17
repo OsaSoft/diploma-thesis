@@ -15,13 +15,13 @@ import java.util.concurrent.ConcurrentHashMap
 class NodeStatsController {
 
     @Autowired
-    private IPlatformRepository platformRepository
-
-    @Autowired
     private HealthController healthController
 
     @Autowired
     private IAdapterService adapterService
+
+    @Autowired
+    private IPlatformRepository platformRepository
 
     @Autowired(required = false)
     private IMqStats mqStats

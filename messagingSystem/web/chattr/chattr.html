@@ -13,7 +13,8 @@
 <input id="deviceId" type="text" title="Username" aria-labelledby="deviceIdLabel"><br/>
 <span id="usernameLabel">Username:</span><br/>
 <input id="username" type="text" title="Username" aria-labelledby="usernameLabel"><br/>
-<button id="connect">Connect</button><br/>
+<button id="connect">Connect</button>
+<br/>
 <span id="userIdLabel" style="color: gray">User id:</span> <span id="userId" style="color: gray"></span>
 
 <h3 id="connected">Status: Disonnected</h3>
@@ -53,12 +54,17 @@
         });
     }
 
+    let connectBtn = document.getElementById("connect");
+
     document.getElementById("sendMsg").onclick = () => {
         let targetType = document.getElementById("targetType").value;
         let target = document.getElementById("target").value;
         let text = document.getElementById("messageArea").value;
 
-        let message = new DataMessageDto({text: text, from: MSGR.userName}, null, null, null, MSGR.deviceId, MSGR.userName);
+        let message = new DataMessageDto({
+            text: text,
+            from: MSGR.userName
+        }, null, null, null, MSGR.deviceId, MSGR.userName);
         switch (targetType) {
             case "device":
                 message.targetDevices = [target];
@@ -95,7 +101,15 @@
         document.getElementById("msgs").appendChild(newLine);
     }
 
-    document.getElementById("connect").onclick = () => {
+    function disconnect() {
+        MSGR.disconnect();
+        connectBtn.textContent = "Connect";
+        connectBtn.onclick = connect;
+
+        MSGR.onClose();
+    }
+
+    function connect() {
         document.getElementById("connected").textContent = "Status: Connecting...";
         let deviceId = document.getElementById("deviceId");
         deviceId.readOnly = true;
@@ -105,43 +119,48 @@
         username.readOnly = true;
         MSGR.userName = username.value;
 
-        MSGR.onSuccess = () => {
-            console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
-            appendToMessages("Server", "Connected");
-            document.getElementById("connected").textContent = "Status: Connected";
-            document.getElementById("userId").textContent = MSGR.userId ;
-
-            deviceId.value = MSGR.deviceId;
-            username.value = MSGR.userName;
-        };
-
-        MSGR.onClose = () => {
-            appendToMessages("Server", "Disconnected");
-            document.getElementById("connected").textContent = "Status: Disconnected";
-            deviceId.readOnly = false;
-            username.readOnly = false;
-        };
-
-        MSGR.onFailure = () => {
-            appendToMessages("Server", "Error occured");
-            document.getElementById("connected").textContent = "Status: Disconnected";
-        };
-
-        MSGR.onNotification = (title, body) => {
-            appendToMessages("Server", title + ": " + body);
-            if (notificationOk) {
-                let notification = makeNotification(title, body);
-            }
-        };
-
-        MSGR.onDataMessage = (payload) => {
-            if (payload.text.includes(MSGR.userName)) {
-                MSGR.onNotification("You were mentioned!", payload.from + " mentioned you in a message!");
-            }
-            appendToMessages(payload.from, payload.text);
-        };
-
         MSGR.init();
+    }
+
+    connectBtn.onclick = connect;
+
+    MSGR.onSuccess = () => {
+        console.log("success. Device ID: " + MSGR.deviceId + ", User ID:" + MSGR.userId);
+        appendToMessages("Server", "Connected to node " + MSGR.nodeAddress);
+        document.getElementById("connected").textContent = "Status: Connected";
+        document.getElementById("userId").textContent = MSGR.userId;
+
+        connectBtn.textContent = "Disconnect";
+        connectBtn.onclick = disconnect;
+
+        deviceId.value = MSGR.deviceId;
+        username.value = MSGR.userName;
+    };
+
+    MSGR.onClose = () => {
+        appendToMessages("Server", "Disconnected");
+        document.getElementById("connected").textContent = "Status: Disconnected";
+        deviceId.readOnly = false;
+        username.readOnly = false;
+    };
+
+    MSGR.onFailure = () => {
+        appendToMessages("Server", "Error occured");
+        document.getElementById("connected").textContent = "Status: Disconnected";
+    };
+
+    MSGR.onNotification = (title, body) => {
+        appendToMessages("Server", title + ": " + body);
+        if (notificationOk) {
+            let notification = makeNotification(title, body);
+        }
+    };
+
+    MSGR.onDataMessage = (payload) => {
+        if (payload.text.includes(MSGR.userName)) {
+            MSGR.onNotification("You were mentioned!", payload.from + " mentioned you in a message!");
+        }
+        appendToMessages(payload.from, payload.text);
     };
 </script>
 

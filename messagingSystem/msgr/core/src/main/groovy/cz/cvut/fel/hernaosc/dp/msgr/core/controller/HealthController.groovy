@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/health")
 @Slf4j
 class HealthController {
+
     @RequestMapping(method = RequestMethod.GET)
     def getHealth() {
         def load

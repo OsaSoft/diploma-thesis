@@ -18,3 +18,4 @@ messagingSystem/msgr/websocket-common/out/
 *.iml
 messagingSystem/web/.idea/
 messagingSystem/msgr/activemq/out/
+messagingSystem/msgr/node-stats/out/production/classes/cz/cvut/fel/hernaosc/dp/msgr/nodestats/controller/NodeStatsController.class
