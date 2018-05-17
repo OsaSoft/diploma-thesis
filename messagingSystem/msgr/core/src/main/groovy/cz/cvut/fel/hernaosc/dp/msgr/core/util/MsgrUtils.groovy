@@ -16,15 +16,9 @@ class MsgrUtils {
         def message
 
         if (json.notification) {
-            message = new NotificationDto(title: payload.title, body: payload.body)
+            message = new NotificationDto(payload)
         } else {
-            message = new DataMessageDto(content: payload.content)
-        }
-
-        message.with {
-            targetDevices = payload.targetDevices
-            targetUsers = payload.targetUsers
-            targetGroups = payload.targetGroups
+            message = new DataMessageDto(payload)
         }
 
         message

@@ -65,7 +65,15 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
     }
 
     private onMessageForDevice = { String topic, messageText ->
-        //TODO
+        def message = MsgrUtils.parseMessageFromJson(messageText)
+
+        def devices = deviceRepository.findAllByIdAndPlatformName(message.targetDevices, PLATFORM_NAME)
+
+        GParsPool.withPool {
+            devices.eachParallel {
+                message instanceof NotificationDto ? sendNotification(message.title, message.body, it) : sendMessage(message.content, it)
+            }
+        }
     }
 
     @Override
@@ -99,7 +107,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
         }
 
         Message msg = new Message()
-                .name("TODO")
+                .name(UUID.randomUUID().toString())
                 .data(payload)
                 .token(device.token)
 

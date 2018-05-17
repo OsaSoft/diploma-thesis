@@ -2,10 +2,9 @@ package cz.cvut.fel.hernaosc.dp.msgr.websocket.controller
 
 import cz.cvut.fel.hernaosc.dp.msgr.core.CoordinatorConnector
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
-import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
-import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IPlatformRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto.ConnectionRequest
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,6 +25,9 @@ class WsController {
     private IDeviceRepository deviceRepository
 
     @Autowired
+    private IPlatformRepository platformRepository
+
+    @Autowired
     private IEntityService entityService
 
     @Autowired
@@ -33,7 +35,7 @@ class WsController {
 
     @RequestMapping(path = "/wsConnect", method = RequestMethod.POST)
     def connect(@RequestBody ConnectionRequest connectionRequest) {
-        def platform = entityService.findOrCreateByName(PLATFORM_NAME, IPlatform)
+        def platform = platformRepository.findByName(PLATFORM_NAME)
 
         def user
 

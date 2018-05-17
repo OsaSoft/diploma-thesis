@@ -115,7 +115,7 @@ class MessagingService implements IMessagingService {
 
     @Override
     boolean sendNotificationGroupsIds(String title, String body, List<String> groupIds) {
-        sendPageMessages(groupIds, new NotificationDto(title: title, body: body))
+        sendPageMessages(groupIds, new NotificationDto(title: title, body: body, targetGroups: groupIds))
         true
     }
 
@@ -126,7 +126,7 @@ class MessagingService implements IMessagingService {
             topics = userIds.collectParallel { "q.user.$it" }
         }
 
-        mqSender.send(topics, new JsonBuilder([payload: new NotificationDto(title: title, body: body), notification: true]).toString(), true)
+        mqSender.send(topics, new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetUsers: userIds), notification: true]).toString(), true)
         true
     }
 
@@ -136,7 +136,11 @@ class MessagingService implements IMessagingService {
 
         GParsPool.withPool {
             devices.eachParallel { device ->
-                mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload:  new NotificationDto(title: title, body: body), notification: true] ).toString())
+                if (device.platform.stateless) {
+                    mqSender.send([device.platform.name], new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetDevices: deviceIds), notification: true]).toString(), true)
+                } else {
+                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetDevices: deviceIds), notification: true]).toString())
+                }
             }
         }
         true
@@ -144,7 +148,7 @@ class MessagingService implements IMessagingService {
 
     @Override
     boolean sendMessageGroupsIds(List<String> groupIds, Map data) {
-        sendPageMessages(groupIds, new DataMessageDto(content: data))
+        sendPageMessages(groupIds, new DataMessageDto(content: data, targetGroups: groupIds))
         true
     }
 
@@ -155,7 +159,7 @@ class MessagingService implements IMessagingService {
             topics = userIds.collectParallel { "q.user.$it" }
         }
 
-        mqSender.send(topics, new JsonBuilder([payload: new DataMessageDto(content: data), notification: false] ).toString(), true)
+        mqSender.send(topics, new JsonBuilder([payload: new DataMessageDto(content: data, targetUsers: userIds), notification: false]).toString(), true)
         true
     }
 
@@ -165,7 +169,11 @@ class MessagingService implements IMessagingService {
 
         GParsPool.withPool {
             devices.eachParallel { device ->
-                mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new DataMessageDto(content: data), notification: false] ).toString())
+                if (device.platform.stateless) {
+                    mqSender.send([device.platform.name], new JsonBuilder([payload: new DataMessageDto(content: data, targetDevices: deviceIds), notification: false]).toString(), true)
+                } else {
+                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new DataMessageDto(content: data, targetDevices: deviceIds), notification: false]).toString())
+                }
             }
         }
         true

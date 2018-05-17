@@ -19,6 +19,8 @@ class Platform extends Entity implements IPlatform {
     String name
     //TODO: String adapter class name? Use convention instead, ie, try to find a "NameAdaptor"?
 
+    boolean stateless = true
+
     @OneToMany(mappedBy = "platform", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Device> devices = []
 

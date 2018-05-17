@@ -7,6 +7,10 @@ interface IPlatform extends IEntity {
 
 	void setName(String name)
 
+	boolean isStateless()
+
+    void setStateless(boolean stateless)
+
 	List<IDevice> getDevices()
 
 	void setDevices(List<IDevice> devices)

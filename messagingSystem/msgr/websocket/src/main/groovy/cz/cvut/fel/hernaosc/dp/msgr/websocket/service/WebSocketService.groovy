@@ -55,7 +55,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @PostConstruct
     void init() {
-        entityService.findOrCreateByName(WsController.PLATFORM_NAME, IPlatform)
+        entityService.findOrCreateByName(WsController.PLATFORM_NAME, IPlatform, [stateless: false])
     }
 
     @Override
