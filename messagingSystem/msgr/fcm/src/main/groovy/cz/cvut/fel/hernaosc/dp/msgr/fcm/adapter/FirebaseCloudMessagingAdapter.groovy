@@ -119,4 +119,9 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
     String getPlatformQueueName() {
         PLATFORM_NAME
     }
+
+    @Override
+    long getBoundClientsNum() {
+        0
+    }
 }

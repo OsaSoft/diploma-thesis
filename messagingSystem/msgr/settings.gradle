@@ -4,4 +4,5 @@ include 'mysql'
 include 'websocket'
 include 'websocket-common'
 include 'activemq'
+include 'node-stats'
 

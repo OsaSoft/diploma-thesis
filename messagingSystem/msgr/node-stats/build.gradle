@@ -26,10 +26,8 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-activemq')
+    compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.codehaus.groovy:groovy-all:2.4.13')
-
-    compile "org.codehaus.gpars:gpars:1.2.1"
 
     compile project(":core")
 

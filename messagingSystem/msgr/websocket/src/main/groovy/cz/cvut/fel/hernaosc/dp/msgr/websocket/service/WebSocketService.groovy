@@ -203,4 +203,9 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
     String getPlatformQueueName() {
         WsController.PLATFORM_NAME
     }
+
+    @Override
+    long getBoundClientsNum() {
+        sessions.size()
+    }
 }

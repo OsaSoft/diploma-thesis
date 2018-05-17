@@ -6,4 +6,5 @@ interface IPlatformAdapter {
 	boolean sendNotification(String title, String body, IDevice device)
 	boolean sendMessage(Map payload, IDevice device)
 	String getPlatformQueueName()
+    long getBoundClientsNum()
 }
