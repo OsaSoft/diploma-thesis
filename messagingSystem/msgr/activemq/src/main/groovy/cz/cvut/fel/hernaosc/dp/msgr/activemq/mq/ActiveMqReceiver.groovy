@@ -3,7 +3,9 @@ package cz.cvut.fel.hernaosc.dp.msgr.activemq.mq
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
+import org.apache.activemq.pool.PooledConnectionFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.jms.listener.AbstractMessageListenerContainer
 import org.springframework.jms.listener.DefaultMessageListenerContainer
 import org.springframework.stereotype.Component
 
@@ -16,9 +18,9 @@ import java.util.function.BiConsumer
 class ActiveMqReceiver implements IReceiver<String, String> {
 
     @Autowired
-    private ConnectionFactory connectionFactory
+    private PooledConnectionFactory pooledConnectionFactory
 
-    private Map<String, DefaultMessageListenerContainer> containers = [:] as ConcurrentHashMap
+    private Map<String, AbstractMessageListenerContainer> containers = [:] as ConcurrentHashMap
 
     private Map<String, BiConsumer<String, String>> listeners = [:] as ConcurrentHashMap
 
@@ -76,7 +78,8 @@ class ActiveMqReceiver implements IReceiver<String, String> {
         }
 
         def container = new DefaultMessageListenerContainer(
-                connectionFactory: connectionFactory,
+                connectionFactory: pooledConnectionFactory,
+                cacheLevel: DefaultMessageListenerContainer.CACHE_SESSION,
                 pubSubDomain: !listener.isQueue,
                 messageListener: listener,
                 destinationName: topic
