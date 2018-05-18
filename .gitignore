@@ -19,3 +19,12 @@ messagingSystem/msgr/websocket-common/out/
 messagingSystem/web/.idea/
 messagingSystem/msgr/activemq/out/
 messagingSystem/msgr/node-stats/out/production/classes/cz/cvut/fel/hernaosc/dp/msgr/nodestats/controller/NodeStatsController.class
+messagingSystem/java-client/.gradle/
+messagingSystem/java-client/.idea/
+messagingSystem/java-client/build/
+messagingSystem/java-client/gradle/
+messagingSystem/java-client/out/
+messagingSystem/msgr/message-common/out/
+stuff/fcm/local.properties
+messagingSystem/MsgrChattr/gradle/
+messagingSystem/MsgrChattr/.idea/
