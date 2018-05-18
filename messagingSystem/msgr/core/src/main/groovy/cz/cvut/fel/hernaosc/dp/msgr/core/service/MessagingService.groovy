@@ -6,11 +6,11 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IUserRepository
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.MessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.MessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool

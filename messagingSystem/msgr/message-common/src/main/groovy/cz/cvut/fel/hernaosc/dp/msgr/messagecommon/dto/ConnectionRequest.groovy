@@ -1,4 +1,4 @@
-package cz.cvut.fel.hernaosc.dp.msgr.websocket.common.dto
+package cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto
 
 class ConnectionRequest {
     String deviceId
@@ -6,4 +6,6 @@ class ConnectionRequest {
 
     String userId
     String userName
+
+    String platformName
 }

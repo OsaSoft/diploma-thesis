@@ -3,12 +3,12 @@ package cz.cvut.fel.hernaosc.dp.msgr.fcm.adapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,9 +1,9 @@
 package cz.cvut.fel.hernaosc.dp.msgr.core.controller
 
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RequestBody

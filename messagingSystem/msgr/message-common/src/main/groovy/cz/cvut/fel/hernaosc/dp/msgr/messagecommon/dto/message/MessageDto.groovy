@@ -1,4 +1,4 @@
-package cz.cvut.fel.hernaosc.dp.msgr.core.dto.message
+package cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message
 
 abstract class MessageDto {
     List<String> targetDevices

@@ -38,12 +38,13 @@ class ConnectionRequest {
         this.deviceName = deviceName;
         this.userId = userId;
         this.userName = userName;
+        this.platformName = "websocket";
     }
 }
 
 class MsgrClient {
     static get defaultUrl() {
-        return "http://localhost:8080/wsConnect";
+        return "http://localhost:8080/connect";
     }
 
     constructor() {

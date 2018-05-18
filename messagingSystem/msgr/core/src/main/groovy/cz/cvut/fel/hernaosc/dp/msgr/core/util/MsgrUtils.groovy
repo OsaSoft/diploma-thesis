@@ -1,8 +1,8 @@
 package cz.cvut.fel.hernaosc.dp.msgr.core.util
 
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.DataMessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.MessageDto
-import cz.cvut.fel.hernaosc.dp.msgr.core.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.DataMessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.MessageDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import groovy.json.JsonSlurper
 
 class MsgrUtils {
