@@ -28,3 +28,6 @@ messagingSystem/msgr/message-common/out/
 stuff/fcm/local.properties
 messagingSystem/MsgrChattr/gradle/
 messagingSystem/MsgrChattr/.idea/
+messagingSystem/MsgrChattr/app/build/
+messagingSystem/MsgrChattr/.gradle/
+messagingSystem/MsgrChattr/local.properties
