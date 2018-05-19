@@ -1,9 +1,8 @@
 include 'core'
+include 'message-common'
 include 'fcm'
 include 'mysql'
-include 'websocket'
 include 'websocket-common'
+include 'websocket'
 include 'activemq'
 include 'node-stats'
-include 'message-common'
-

@@ -6,10 +6,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.gson.Gson;
+import com.orhanobut.logger.AndroidLogAdapter;
+import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
 
@@ -17,7 +19,9 @@ import cz.cvut.fel.hernaosc.dp.msgr.javaclient.MsgrClient;
 
 public class MainActivity extends Activity {
 
-    private static String TAG = "========= MAIN ACTIVITY";
+    static {
+        Logger.addLogAdapter(new AndroidLogAdapter());
+    }
 
     private BroadcastReceiver messageReceived = new BroadcastReceiver() {
 
@@ -41,14 +45,15 @@ public class MainActivity extends Activity {
         tv1.setText("Chattr is connecting...");
 
         String firebaseToken = FirebaseInstanceId.getInstance().getToken();
-        Log.i(TAG, "Got FCM token: " + firebaseToken);
+        Logger.i("Got FCM token: " + firebaseToken);
 
 //        registerReceiver(messageReceived, new IntentFilter(FcmService.BROADCAST_ACTION));
-
         msgrClient.setUrl("http://192.168.1.2:8080");
         msgrClient.setPlatformName("FCM");
         msgrClient.setDeviceToken(firebaseToken);
         msgrClient.setUserName("oscar");
+        msgrClient.setToJson((obj) -> new Gson().toJson(obj));
+
         AsyncTask.execute(() -> {
             try {
                 msgrClient.init();
@@ -56,7 +61,7 @@ public class MainActivity extends Activity {
                         "Chattr is connected.\n User: " + msgrClient.getUserName() + " (" + msgrClient.getUserId() + ")"
                 );
             } catch (IOException e) {
-                Log.i(TAG, "Could not connect to " + msgrClient.getUrl() + ". Exception " + e.getMessage(), e);
+                Logger.e("Could not connect to " + msgrClient.getUrl() + ". Exception " + e.getMessage(), e);
                 tv1.setText("Chattr is disconnected (ERROR: " + e.getMessage() + ")");
             }
         });

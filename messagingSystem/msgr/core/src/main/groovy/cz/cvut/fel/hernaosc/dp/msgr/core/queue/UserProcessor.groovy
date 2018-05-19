@@ -38,7 +38,11 @@ class UserProcessor {
 
         GParsPool.withPool {
             devices.eachParallel { device ->
-                mqSender.send(["${device.platform.name}.$device.id"], messageText)
+                if (device.platform.stateless) {
+                    mqSender.send([device.platform.name], messageText, true)
+                } else {
+                    mqSender.send(["${device.platform.name}.$device.id"], messageText)
+                }
             }
         }
     }

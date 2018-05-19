@@ -7,6 +7,9 @@ import groovyx.gpars.GParsPool
 import groovyx.net.http.ContentType
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.config.SocketConfig
+import org.apache.http.impl.client.HttpClients
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -21,6 +24,8 @@ class CoordinatorService {
     private float maxLoad = 0.9
     @Value('${coordinator.node.unhealthy.timeout:#{15}}')
     private int nodeTimeout = 15
+    @Value('${coordinator.healthcheck.connection.timeout:#{1000}}')
+    private int connectionTimeout = 1000
 
     Map<MsgrNode, NodeStatus> nodes = [:] as ConcurrentHashMap
 
@@ -68,7 +73,14 @@ class CoordinatorService {
 
     private NodeStatus checkNodeHealth(MsgrNode node) {
         log.trace "Starting health check on node $node"
+
+        //TODO: move possibly to some method?
+        SocketConfig sc = SocketConfig.custom().setSoTimeout(connectionTimeout).build()
+        RequestConfig rc = RequestConfig.custom().setConnectTimeout(connectionTimeout).setSocketTimeout(connectionTimeout).build()
+        def hc = HttpClients.custom().setDefaultSocketConfig(sc).setDefaultRequestConfig(rc).build()
+
         def client = new RESTClient("http://$node.address")
+        client.client = hc
         try {
             def response = client.get(
                     path: "/health",

@@ -7,6 +7,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IPlatformRepository
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.ConnectionRequest
+import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.RequestBody
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@Slf4j
 class ConnectionController {
     @Value('${msgr.node.address}')
     private String address
@@ -33,10 +35,10 @@ class ConnectionController {
 
     @RequestMapping(path = "/connect", method = RequestMethod.POST)
     def connect(@RequestBody ConnectionRequest connectionRequest) {
+        log.debug "Received connection request $connectionRequest"
         def platform = platformRepository.findByName(connectionRequest.platformName)
 
         def user
-
         if (connectionRequest.userId) {
             user = entityService.findOrCreateById(connectionRequest.userId, IUser, [
                     name: connectionRequest.userName ?: UUID.randomUUID().toString()
@@ -45,10 +47,15 @@ class ConnectionController {
             user = entityService.findOrCreateByName(connectionRequest.userName, IUser)
         }
 
-        def device = entityService.findOrCreateById(connectionRequest.deviceId, IDevice, [
-                platform: platform,
-                token   : connectionRequest.deviceToken ?: UUID.randomUUID().toString()
-        ])
+        def device
+        if (connectionRequest.deviceToken) {
+            device = entityService.findOrCreateByName(connectionRequest.deviceToken, IDevice, [platform: platform])
+        } else {
+            device = entityService.findOrCreateById(connectionRequest.deviceId, IDevice, [
+                    platform: platform,
+                    token   : connectionRequest.deviceToken ?: UUID.randomUUID().toString()
+            ])
+        }
 
         device.user = user
         deviceRepository.save(device)

@@ -34,7 +34,12 @@
 <span id="targetLabel">Target:</span><br/>
 <input id="target" type="text" title="Target" aria-labelledby="targetLabel"><br/>
 
-<span id="messageLabel">Message:</span><br/>
+<span id="messageLabel">
+    <select id="msgType" title="Message type">
+    <option value="message">Message</option>
+    <option value="notification">Notification</option>
+</select>
+:</span><br/>
 <textarea id="messageArea" title="Message" aria-labelledby="messageLabel"></textarea><br/>
 
 <button id="sendMsg">Send</button>
@@ -58,13 +63,23 @@
 
     document.getElementById("sendMsg").onclick = () => {
         let targetType = document.getElementById("targetType").value;
+        let msgType = document.getElementById("msgType").value;
         let target = document.getElementById("target").value;
         let text = document.getElementById("messageArea").value;
 
-        let message = new DataMessageDto({
-            text: text,
-            from: MSGR.userName
-        }, null, null, null, MSGR.deviceId, MSGR.userName);
+        let message;
+        switch (msgType) {
+            case "message":
+                message = new DataMessageDto({
+                    text: text,
+                    from: MSGR.userName
+                }, [], [], [], MSGR.deviceId, MSGR.userName);
+                break;
+            case "notification":
+                message = new NotificationDto("Chattr notification", text, [], [], [], MSGR.deviceId, MSGR.userName);
+                break;
+        }
+
         switch (targetType) {
             case "device":
                 message.targetDevices = [target];
@@ -76,9 +91,12 @@
                 message.targetGroups = [target];
                 break;
         }
-        MSGR.send(message);
 
-        appendToMessages(MSGR.userName, text);
+        if (!(message.targetDevices.includes(MSGR.deviceId) || message.targetUsers.includes(MSGR.userId))) {
+            message.targetDevices.push(MSGR.deviceId);
+        }
+
+        MSGR.send(message);
     };
 
     function makeNotification(title, body) {

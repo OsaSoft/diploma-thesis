@@ -13,6 +13,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +23,8 @@ public class MsgrClient {
 	private static final String JSON = "application/json";
 	private static final String POST = "POST";
 	private static final int HTTP_OK = 200;
+
+	private boolean android = false;
 
 	private String url;
 	private int serverRefresh = 30;
@@ -36,9 +39,11 @@ public class MsgrClient {
 	private List<String> addresses;
 	private long lastUpdate;
 
+	private Function<Object, String> toJson = (obj) -> new JsonBuilder(obj).toString();
+
 	public void init() throws IOException {
 
-		log.info("Connecting to $url");
+		log.info("Connecting to " + url);
 		refreshNodes();
 
 		if (addresses == null || addresses.isEmpty()) {
@@ -55,7 +60,7 @@ public class MsgrClient {
 			String address = getRandomAddress();
 			address = "http://" + address + "/send/" + type;
 
-			log.log(Level.FINE, "Sending message " + message + " to node @" + address);
+			log.info("Sending message " + message + " to node @" + address);
 			Object result = doRequest(POST, address, message);
 			if (result != null) {
 				log.info("Message successfully sent");
@@ -85,20 +90,22 @@ public class MsgrClient {
 		String fullIUrl = url + "/connect";
 		Map<String, Object> result = doRequest(POST, fullIUrl, buildConnectionRequest());
 		if (result != null) {
-			log.log(Level.FINE, "Received result $result");
+			log.info("Received result " + result);
 
 			addresses = (List<String>) result.get("addresses");
 			lastUpdate = new Date().getTime();
 
 			setData((Map) result.get("deviceData"));
-			log.info("Received node IPs: $addresses");
+			log.info("Received node IPs: " + addresses);
 		} else {
-			throw new IOException("Could not connect to $url");
+			throw new IOException("Could not connect to " + url);
 		}
 	}
 
 	private Map<String, Object> doRequest(String method, String fullUrl, Object objToSend) throws IOException {
-		String payload = objToSend != null ? new JsonBuilder(objToSend).toString() : "";
+		String payload = toJson.apply(objToSend);
+
+		log.info("Sending payload: " + payload);
 
 		URL endpoint = new URL(fullUrl);
 		HttpURLConnection connection = (HttpURLConnection) endpoint.openConnection();
@@ -121,12 +128,16 @@ public class MsgrClient {
 		if (platformName == null || platformName.length() == 0)
 			throw new RuntimeException("Platform is not set! You must set a platform before connecting.");
 
+		log.info("Building ConnectinRequest...");
+
 		ConnectionRequest request = new ConnectionRequest();
 		request.setDeviceId(deviceId);
 		request.setDeviceToken(deviceToken);
 		request.setUserId(userId);
 		request.setUserName(userName);
 		request.setPlatformName(platformName);
+
+		log.info("Done building ConnectionRequest: " + request);
 
 		return request;
 	}
@@ -192,5 +203,13 @@ public class MsgrClient {
 
 	public void setPlatformName(String platformName) {
 		this.platformName = platformName;
+	}
+
+	public boolean isAndroid() {
+		return android;
+	}
+
+	public void setToJson(Function<Object, String> toJson) {
+		this.toJson = toJson;
 	}
 }

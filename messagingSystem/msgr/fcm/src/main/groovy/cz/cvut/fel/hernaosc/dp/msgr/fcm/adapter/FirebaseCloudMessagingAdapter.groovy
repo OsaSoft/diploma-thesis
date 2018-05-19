@@ -48,7 +48,6 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
     void init() {
         if (!projectId || !serviceAccountFilename) {
             log.error "FCM not configured"
-            return
         }
 
         try {
@@ -65,13 +64,25 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
     }
 
     private onMessageForDevice = { String topic, messageText ->
+        log.debug "Processing message $messageText"
         def message = MsgrUtils.parseMessageFromJson(messageText)
 
-        def devices = deviceRepository.findAllByIdAndPlatformName(message.targetDevices, PLATFORM_NAME)
+        def devices = deviceRepository.findAllByUserIdInAndPlatformName(message.targetUsers, PLATFORM_NAME)
 
         GParsPool.withPool {
             devices.eachParallel {
-                message instanceof NotificationDto ? sendNotification(message.title, message.body, it) : sendMessage(message.content, it)
+                if (message instanceof NotificationDto) {
+                    sendNotification(message.title, message.body, it)
+                } else {
+                    //data messages on FCM have a few reserved words, so lets just prepend everything to eliminate
+                    //any chance of matching them
+                    def content = [:]
+                    message.content.keySet().each {
+                        content["msgr.$it"] = message.content[it]
+                    }
+
+                    sendMessage(content, it)
+                }
             }
         }
     }
@@ -83,6 +94,10 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
             return false
         }
 
+        log.debug "Sending FCM notification to $device."
+        log.debug "Title: $title"
+        log.debug "Body: $body"
+
         Notification notification =
                 new Notification()
                         .title(title)
@@ -90,7 +105,6 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 
         Message msg =
                 new Message()
-                        .name("TODO")
                         .notification(notification)
                         .token(device.token)
 
@@ -106,10 +120,14 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
             return false
         }
 
+        log.debug "Sending FCM message to $device."
+        log.debug "Message: $payload"
+
         Message msg = new Message()
-                .name(UUID.randomUUID().toString())
-                .data(payload)
+                .data(MsgrUtils.flattenMap(payload))
                 .token(device.token)
+
+        log.trace "Payload to FCM is " + msg.toJson().toString()
 
         FcmResponse response = Pushraven.push(msg)
         log.debug "Received response $response"

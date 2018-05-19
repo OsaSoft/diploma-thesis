@@ -148,10 +148,10 @@ class MsgrClient {
         this.userName = data.userName;
     }
 
-    send(data) {
+    send(messageDto) {
         if (this.connected) {
-            let message = {payload: data};
-            message.notification = message instanceof NotificationDto;
+            let message = {payload: messageDto};
+            message.notification = messageDto instanceof NotificationDto;
 
             this.websocket.send(JSON.stringify(message));
             return true;
