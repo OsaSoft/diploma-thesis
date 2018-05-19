@@ -27,3 +27,5 @@ msgr.group.user.page.size=
 spring.activemq.broker-url=
 spring.activemq.user=
 spring.activemq.password=
+# maximum number of connections to ActiveMQ. Max 500 sessions per connection. (Default 1)
+msgr.activemq.max.connections=
