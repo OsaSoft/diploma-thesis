@@ -60,7 +60,6 @@ public class MsgrClient {
 			String address = getRandomAddress();
 			address = "http://" + address + "/send/" + type;
 
-			log.info("Sending message " + message + " to node @" + address);
 			Object result = doRequest(POST, address, message);
 			if (result != null) {
 				log.info("Message successfully sent");

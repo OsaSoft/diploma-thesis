@@ -23,7 +23,7 @@ class MessageController {
     ISender<String, String> sender
 
     @RequestMapping(path = "/notification", method = RequestMethod.POST)
-    void sendNotification(@RequestBody NotificationDto notificationDto) {
+    def sendNotification(@RequestBody NotificationDto notificationDto) {
         log.debug "Received notification $notificationDto"
 
         ["Devices", "Users", "Groups"].each {
@@ -31,10 +31,12 @@ class MessageController {
                 messagingService."sendNotification${it}Ids"(notificationDto.title, notificationDto.body, notificationDto."target$it")
             }
         }
+
+        [status: "SENT"]
     }
 
     @RequestMapping(path = "/message", method = RequestMethod.POST)
-    void sendMessage(@RequestBody DataMessageDto dataMessageDto) {
+    def sendMessage(@RequestBody DataMessageDto dataMessageDto) {
         log.debug "Received message $dataMessageDto"
 
         ["Devices", "Users", "Groups"].each {
@@ -42,5 +44,7 @@ class MessageController {
                 messagingService."sendMessage${it}Ids"(dataMessageDto."target$it", dataMessageDto.content)
             }
         }
+
+        [status: "SENT"]
     }
 }
