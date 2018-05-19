@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.widget.TextView;
 
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -14,7 +16,10 @@ import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import cz.cvut.fel.hernaosc.dp.msgr.chattr.service.FcmService;
 import cz.cvut.fel.hernaosc.dp.msgr.javaclient.MsgrClient;
 
 public class MainActivity extends Activity {
@@ -23,13 +28,20 @@ public class MainActivity extends Activity {
         Logger.addLogAdapter(new AndroidLogAdapter());
     }
 
-    private BroadcastReceiver messageReceived = new BroadcastReceiver() {
+    private static String get(Bundle bundle, String key) {
+        return bundle.getString("msgr." + key);
+    }
 
+    private BroadcastReceiver messageReceived = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Logger.d("Received intent " + intent);
+
+            Bundle content = intent.getExtras();
             TextView tv = findViewById(R.id.textView2);
-            String text = "Message title: " + intent.getExtras().getString("messageTitle") +
-                    "\n\nMessage body: " + intent.getExtras().getString("messageBody");
+            String text = tv.getText() + "\n" +
+                    new SimpleDateFormat().format(new Date()) + " @" + get(content, "from") +
+                    ": " + get(content, "text");
             tv.setText(text);
         }
     };
@@ -39,6 +51,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(
+                messageReceived, new IntentFilter(FcmService.BROADCAST_ACTION));
+
         setContentView(R.layout.activity_main);
 
         TextView tv1 = findViewById(R.id.textView);
@@ -47,12 +63,11 @@ public class MainActivity extends Activity {
         String firebaseToken = FirebaseInstanceId.getInstance().getToken();
         Logger.i("Got FCM token: " + firebaseToken);
 
-//        registerReceiver(messageReceived, new IntentFilter(FcmService.BROADCAST_ACTION));
         msgrClient.setUrl("http://192.168.1.2:8080");
         msgrClient.setPlatformName("FCM");
         msgrClient.setDeviceToken(firebaseToken);
         msgrClient.setUserName("oscar");
-        msgrClient.setToJson((obj) -> new Gson().toJson(obj));
+        msgrClient.setToJson(obj -> new Gson().toJson(obj));
 
         AsyncTask.execute(() -> {
             try {
