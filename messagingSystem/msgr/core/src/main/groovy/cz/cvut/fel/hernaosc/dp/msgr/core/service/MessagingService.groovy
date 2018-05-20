@@ -44,7 +44,7 @@ class MessagingService implements IMessagingService {
             return false
         }
 
-        sendNotificationUsers(title, body, group.users)
+        sendNotificationGroupsIds(title, body, [group.id])
     }
 
     @Override
@@ -54,7 +54,7 @@ class MessagingService implements IMessagingService {
             return false
         }
 
-        sendNotificationDevices(title, body, user.devices)
+        sendNotificationUsersIds(title, body, [user.id])
     }
 
     @Override
@@ -64,53 +64,67 @@ class MessagingService implements IMessagingService {
             return false
         }
 
-        //TODO:
-        IPlatform platform = device.platform
-
-        if (!platform) {
-            log.warn "Device $device.id has no platform. Cannot send notification"
-            return false
-        }
-
-        IPlatformAdapter platformAdapter = adapterService.getAdapter(platform)
-        platformAdapter.sendNotification(title, body, device)
+        sendNotificationDevicesIds(title, body, [device.id])
     }
 
     @Override
     boolean sendNotificationGroups(String title, String body, List<IGroup> groups) {
-        GParsPool.withPool {
-            groups?.everyParallel { sendNotification(title, body, it) }
-        }
+        sendNotificationGroupsIds(title, body, groups*.id)
     }
 
     @Override
     boolean sendNotificationUsers(String title, String body, List<IUser> users) {
-        GParsPool.withPool {
-            users?.everyParallel { sendNotificationDevices(title, body, it.devices) }
-        }
+        sendNotificationUsersIds(title, body, users*.id)
     }
 
     @Override
     boolean sendNotificationDevices(String title, String body, List<IDevice> devices) {
-        GParsPool.withPool {
-            devices?.everyParallel { sendNotification(title, body, it) }
-        }
+        sendNotificationDevicesIds(title, body, devices*.id)
     }
 
-    private int numPages(long count) {
-        count.intdiv(pageSize) + (count % pageSize == 0 ? 0 : 1)
+    @Override
+    boolean sendMessage(IGroup group, Map data) {
+        if (!group) {
+            log.warn "Trying to send message to null group"
+            return false
+        }
+
+        sendMessageGroupsIds([group.id], data)
     }
 
-    private void sendPageMessages(List<String> groupIds, MessageDto message) {
-        GParsPool.withPool {
-            groupIds.eachParallel { groupId ->
-                int page = 0
-                numPages(userRepository.countByGroups_Id(groupId)).times {
-                    def payload = [page: page++, msg: message, notification: message instanceof NotificationDto]
-                    mqSender.send(["q.group.$groupId"], new JsonBuilder(payload).toString(), true)
-                }
-            }
+    @Override
+    boolean sendMessage(IUser user, Map data) {
+        if (!user) {
+            log.warn "Trying to send message to null user"
+            return false
         }
+
+        sendMessageUsersIds([user.id], data)
+    }
+
+    @Override
+    boolean sendMessage(IDevice device, Map data) {
+        if (!device) {
+            log.warn "Trying to send message to null device"
+            return false
+        }
+
+        sendMessageDevicesIds([device.id], data)
+    }
+
+    @Override
+    boolean sendMessageGroups(List<IGroup> groups, Map data) {
+        sendMessageGroupsIds(groups*.id, data)
+    }
+
+    @Override
+    boolean sendMessageUsers(List<IUser> users, Map data) {
+        sendMessageUsersIds(users*.id, data)
+    }
+
+    @Override
+    boolean sendMessageDevices(List<IDevice> devices, Map data) {
+        sendMessageDevicesIds(devices*.id, data)
     }
 
     @Override
@@ -179,58 +193,19 @@ class MessagingService implements IMessagingService {
         true
     }
 
-    @Override
-    boolean sendMessage(IGroup group, Map data) {
-        if (!group) {
-            log.warn "Trying to send message to null group"
-            return false
-        }
-
-        sendMessageUsers(group.users, data)
+    private int numPages(long count) {
+        count.intdiv(pageSize) + (count % pageSize == 0 ? 0 : 1)
     }
 
-    @Override
-    boolean sendMessage(IUser user, Map data) {
-        if (!user) {
-            log.warn "Trying to send message to null user"
-            return false
-        }
-
-        sendMessageDevices(user.devices, data)
-    }
-
-    @Override
-    boolean sendMessage(IDevice device, Map data) {
-        //TODO:
-        IPlatform platform = device.platform
-
-        if (!platform) {
-            log.warn "Device $device.id has no platform. Cannot send notification"
-            return false
-        }
-
-        IPlatformAdapter platformAdapter = adapterService.getAdapter(platform)
-        platformAdapter.sendMessage(data, device)
-    }
-
-    @Override
-    boolean sendMessageGroups(List<IGroup> groups, Map data) {
+    private void sendPageMessages(List<String> groupIds, MessageDto message) {
         GParsPool.withPool {
-            groups.everyParallel { sendMessage(it, data) }
-        }
-    }
-
-    @Override
-    boolean sendMessageUsers(List<IUser> users, Map data) {
-        GParsPool.withPool {
-            users.everyParallel { sendMessage(it, data) }
-        }
-    }
-
-    @Override
-    boolean sendMessageDevices(List<IDevice> devices, Map data) {
-        GParsPool.withPool {
-            devices.everyParallel { sendMessage(it, data) }
+            groupIds.eachParallel { groupId ->
+                int page = 0
+                numPages(userRepository.countByGroups_Id(groupId)).times {
+                    def payload = [page: page++, msg: message, notification: message instanceof NotificationDto]
+                    mqSender.send(["q.group.$groupId"], new JsonBuilder(payload).toString(), true)
+                }
+            }
         }
     }
 }

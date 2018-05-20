@@ -12,6 +12,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 
 @javax.persistence.Entity
+@ToString(includeSuper = true, includeNames = true, includePackage = false)
 class Device extends Entity implements IDevice {
     @Column(unique = true)
     String token
@@ -33,15 +34,6 @@ class Device extends Entity implements IDevice {
     @Override
     void setUser(IUser user) {
         this.user = (User) user
-    }
-
-    @Override
-    String toString() {
-        return "Device{" +
-                "token='" + token + '\'' +
-                ", platform=" + platform.name +
-                ", user=" + user.id +
-                '}'
     }
 }
 

@@ -17,12 +17,6 @@ interface IMessagingService {
 
     boolean sendNotificationDevices(String title, String body, List<IDevice> devices)
 
-    boolean sendNotificationGroupsIds(String title, String body, List<String> groupIds)
-
-    boolean sendNotificationUsersIds(String title, String body, List<String> userIds)
-
-    boolean sendNotificationDevicesIds(String title, String body, List<String> deviceIds)
-
     boolean sendMessage(IGroup group, Map data)
 
     boolean sendMessage(IUser user, Map data)
@@ -34,6 +28,12 @@ interface IMessagingService {
     boolean sendMessageUsers(List<IUser> users, Map data)
 
     boolean sendMessageDevices(List<IDevice> devices, Map data)
+
+    boolean sendNotificationGroupsIds(String title, String body, List<String> groupIds)
+
+    boolean sendNotificationUsersIds(String title, String body, List<String> userIds)
+
+    boolean sendNotificationDevicesIds(String title, String body, List<String> deviceIds)
 
     boolean sendMessageGroupsIds(List<String> groupIds, Map data)
 

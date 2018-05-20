@@ -3,13 +3,13 @@ package cz.cvut.fel.hernaosc.dp.msgr.core.service
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.IEntity
 
 interface IEntityService {
-    IEntity findOrCreateById(String id, Class clazz)
+    def <E extends IEntity> E findOrCreateById(String id, Class<E> clazz)
 
-    IEntity findOrCreateById(String id, Class clazz, Map params)
+    def <E extends IEntity> E findOrCreateById(String id, Class<E> clazz, Map params)
 
-    IEntity findOrCreateByName(String name, Class clazz)
+    def <E extends IEntity> E findOrCreateByName(String name, Class<E> clazz)
 
-    IEntity findOrCreateByName(String name, Class clazz, Map params)
+    def <E extends IEntity> E findOrCreateByName(String name, Class<E> clazz, Map params)
 
-    IEntity create(Map params, Class clazz)
+    def <E extends IEntity> E create(Map params, Class<E> clazz)
 }

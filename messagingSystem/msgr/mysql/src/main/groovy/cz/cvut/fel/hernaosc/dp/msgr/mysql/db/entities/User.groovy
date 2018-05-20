@@ -11,6 +11,7 @@ import javax.persistence.ManyToMany
 import javax.persistence.OneToMany
 
 @javax.persistence.Entity
+//Cannot use Groovy @ToString, because that attempts to load relations
 class User extends Entity implements IUser {
     @Column(unique = true)
     String name
@@ -40,8 +41,8 @@ class User extends Entity implements IUser {
     String toString() {
         return "User{" +
                 "name='" + name + '\'' +
-                ", devices=" + devices*.id +
-                ", groups=" + groups*.id +
+                "id=" + id +
+                "dateCreated=" + dateCreated +
                 '}'
     }
 }

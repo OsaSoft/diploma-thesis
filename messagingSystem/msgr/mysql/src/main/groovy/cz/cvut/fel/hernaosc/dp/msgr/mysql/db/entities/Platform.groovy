@@ -3,14 +3,13 @@ package cz.cvut.fel.hernaosc.dp.msgr.mysql.db.entities
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IPlatform
 import cz.cvut.fel.hernaosc.dp.msgr.mysql.db.Entity
-import groovy.transform.ToString
 
 import javax.persistence.CascadeType
 import javax.persistence.Column
 import javax.persistence.OneToMany
 
 @javax.persistence.Entity
-@ToString(includeNames = true, includePackage = false, includeSuper = true)
+//Cannot use Groovy @ToString, because that attempts to load relations
 class Platform extends Entity implements IPlatform {
     /**
      * IPlatform name
@@ -38,7 +37,7 @@ class Platform extends Entity implements IPlatform {
     String toString() {
         return "Platform{" +
                 "name='" + name + '\'' +
-                ", devices=" + devices*.id +
+                ", stateless=" + stateless +
                 '}'
     }
 }

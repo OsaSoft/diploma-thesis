@@ -1,5 +1,9 @@
 package cz.cvut.fel.hernaosc.dp.msgr.websocket.service
 
+import cz.cvut.fel.hernaosc.dp.msgr.core.db.repository.IDeviceRepository
+import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IReceiver
+import cz.cvut.fel.hernaosc.dp.msgr.core.mq.ISender
+import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.DataMessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
@@ -15,12 +19,17 @@ class WebSocketServiceTest extends Specification {
     WebSocketService webSocketService = new WebSocketService()
 
     void setup() {
+        webSocketService.deviceRepository = Mock(IDeviceRepository)
+        webSocketService.messagingService = Mock(IMessagingService)
+        webSocketService.entityService = Mock(IEntityService)
+        webSocketService.mqReceiver = Mock(IReceiver)
+        webSocketService.mqSender = Mock(ISender)
     }
 
     void cleanup() {
     }
 
-    def "When connection is established, session is mapped to device and connection message is sent"() {
+    def "Established connection is handled"() {
         given:
             def deviceId = "device-test"
             def session = Mock(WebSocketSession) {
@@ -28,12 +37,14 @@ class WebSocketServiceTest extends Specification {
                 getUri() >> new URI("/ws/$deviceId")
             }
 
-        when:
+        when: "Connection is established"
             webSocketService.afterConnectionEstablished(session)
-        then:
+        then: "session is mapped to device"
             webSocketService.sessions[deviceId] == session
-        and:
+        and: "connection message is sent"
             1 * session.sendMessage(_)
+        and: "mq is subscribed"
+            1 * webSocketService.mqReceiver.subscribe(["$webSocketService.platformQueueName.$deviceId"], _)
     }
 
     def "When connection is closed, session is removed from device map"() {
@@ -61,7 +72,7 @@ class WebSocketServiceTest extends Specification {
                 getUri() >> new URI("/ws/$deviceId")
             }
         and:
-            def messagingService = webSocketService.messagingService = Mock(IMessagingService)
+            def messagingService = webSocketService.messagingService
         and:
             def textMessage = new TextMessage(new JsonBuilder([notification: notification, payload: message]).toString())
         and:
@@ -71,9 +82,9 @@ class WebSocketServiceTest extends Specification {
             webSocketService.handleTextMessage(session, textMessage)
         then:
             if (notification) {
-                1 * messagingService.sendNotificationGroups(message.title, message.body, message.targetGroups)
+                1 * messagingService.sendNotificationGroupsIds(message.title, message.body, message.targetGroups)
             } else {
-                1 * messagingService.sendMessageGroups(message.targetGroups, message.content)
+                1 * messagingService.sendMessageGroupsIds(message.targetGroups, message.content)
             }
 
         where:

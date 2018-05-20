@@ -34,7 +34,7 @@ class EntityService implements IEntityService {
     private IGroupRepository groupRepository
 
     @Override
-    IEntity findOrCreateById(String id, Class clazz, Map params = [:]) {
+    <E extends IEntity> E findOrCreateById(String id, Class<E> clazz, Map params = [:]) {
         def entity
         if (id) params.id = id
 
@@ -72,7 +72,7 @@ class EntityService implements IEntityService {
     }
 
     @Override
-    IEntity findOrCreateByName(String name, Class clazz, Map params = [:]) {
+    <E extends IEntity> E findOrCreateByName(String name, Class<E> clazz, Map params = [:]) {
         def entity
         params.name = name
 
@@ -100,7 +100,7 @@ class EntityService implements IEntityService {
     }
 
     @Override
-    IEntity create(Map params, Class clazz) {
+    <E extends IEntity> E create(Map params, Class<E> clazz) {
         def entity
 
         switch (clazz) {

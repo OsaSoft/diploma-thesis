@@ -10,7 +10,7 @@ import javax.persistence.*
 @javax.persistence.Entity
 //group is a protected word, cant be table name
 @Table(name = "msgr_group")
-@ToString(includeNames = true, includePackage = false, includeSuper = true)
+//Cannot use Groovy @ToString, because that attempts to load relations
 class Group extends Entity implements IGroup {
     @Column(unique = true)
     String name
@@ -39,8 +39,9 @@ class Group extends Entity implements IGroup {
     @Override
     String toString() {
         return "Group{" +
-                "name='" + name + '\'' +
-                ", users=" + users*.id +
+                "name='" + name + '\'' + //not including users as that would cause them to load from DB
+                "id=" + id +
+                "dateCreated=" + dateCreated +
                 '}'
     }
 }

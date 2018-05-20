@@ -3,15 +3,15 @@ package cz.cvut.fel.hernaosc.dp.msgr.core.db.entities
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.IEntity
 
 interface IDevice extends IEntity {
-	String getToken()
+    String getToken()
 
-	void setToken(String token)
+    void setToken(String token)
 
-	IPlatform getPlatform()
+    IPlatform getPlatform()
 
-	void setPlatform(IPlatform platform)
+    void setPlatform(IPlatform platform)
 
-	IUser getUser()
+    IUser getUser()
 
-	void setUser(IUser user)
+    void setUser(IUser user)
 }

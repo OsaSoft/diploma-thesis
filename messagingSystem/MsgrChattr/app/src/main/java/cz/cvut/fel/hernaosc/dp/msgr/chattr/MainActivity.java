@@ -85,6 +85,8 @@ public class MainActivity extends Activity {
             message.setTargetUsers(targetUsers);
 
             AsyncTask.execute(() -> msgrClient.send(message));
+
+            ((EditText) findViewById(R.id.messageBody)).setText("");
         });
 
         connectMsgr();

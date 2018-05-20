@@ -38,7 +38,7 @@ class ConnectionController {
         log.debug "Received connection request $connectionRequest"
         def platform = platformRepository.findByName(connectionRequest.platformName)
 
-        def user
+        IUser user
         if (connectionRequest.userId) {
             user = entityService.findOrCreateById(connectionRequest.userId, IUser, [
                     name: connectionRequest.userName ?: UUID.randomUUID().toString()
@@ -47,7 +47,7 @@ class ConnectionController {
             user = entityService.findOrCreateByName(connectionRequest.userName, IUser)
         }
 
-        def device
+        IDevice device
         if (connectionRequest.deviceToken) {
             device = entityService.findOrCreateByName(connectionRequest.deviceToken, IDevice, [platform: platform])
         } else {

@@ -9,7 +9,6 @@ import org.springframework.jms.listener.AbstractMessageListenerContainer
 import org.springframework.jms.listener.DefaultMessageListenerContainer
 import org.springframework.stereotype.Component
 
-import javax.jms.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.BiConsumer
 
@@ -73,7 +72,8 @@ class ActiveMqReceiver implements IReceiver<String, String> {
         log.debug "Subscribing to topic '$topic'"
 
         if (containers[topic]) {
-            log.warn "Trying to subscribe to already subscribed topic '$topic'"
+            log.warn "Trying to subscribe to already subscribed topic '$topic'. Replacing listener"
+            containers[topic].messageListener = listener
             return
         }
 
@@ -94,7 +94,7 @@ class ActiveMqReceiver implements IReceiver<String, String> {
     private void stopListening(String topic) {
         log.debug "Unsubscribing from topic '$topic'"
 
-        def container = containers.remove topic
+        def container = containers.remove(topic)
         if (!container) {
             log.warn "Trying to unsubscribe from topic '$topic', which is not subscribed"
             return
@@ -102,28 +102,5 @@ class ActiveMqReceiver implements IReceiver<String, String> {
 
         container.stop()
         container.shutdown()
-    }
-}
-
-class ActiveMqTopicListener implements MessageListener {
-    boolean isQueue
-    IReceiver<String, String> messageReceiver
-
-    @Override
-    void onMessage(Message message) {
-        def topicName
-        def destination = message.JMSDestination
-        switch (destination) {
-            case Topic:
-                topicName = destination.topicName
-                break
-            case Queue:
-                topicName = destination.queueName
-                break
-            default:
-                return
-        }
-
-        messageReceiver.receiveMessage(topicName, ((TextMessage) message).text)
     }
 }

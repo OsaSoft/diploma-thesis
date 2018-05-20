@@ -13,7 +13,6 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
-import cz.cvut.fel.hernaosc.dp.msgr.websocket.controller.WsController
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
 import groovy.json.JsonException
 import groovy.util.logging.Slf4j
@@ -29,10 +28,11 @@ import javax.annotation.PostConstruct
 import java.util.concurrent.ConcurrentHashMap
 
 @Service
-//@PlatformAdapter(WsController.PLATFORM_NAME)
 @PlatformAdapter("websocket")
 @Slf4j
 class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter {
+
+    static final PLATFORM_NAME = "websocket"
 
     @Autowired
     private IDeviceRepository deviceRepository
@@ -55,7 +55,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @PostConstruct
     void init() {
-        entityService.findOrCreateByName(WsController.PLATFORM_NAME, IPlatform, [stateless: false])
+        entityService.findOrCreateByName(PLATFORM_NAME, IPlatform, [stateless: false])
     }
 
     @Override
@@ -82,12 +82,14 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
 
     @Override
     void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        //TODO: Possible further improvement. Check number of bound sessions on node and available mq connections and if over threshold tell client to connect to other node
+
         def deviceId = getDeviceId(session)
         sessions[deviceId] = session
 
         log.debug "Websocket connection established. Session id: '$session.id'. Device id: '$deviceId'"
 
-        sendWsMessage session, [status: "CONNECTED", code: StatusCodes.WS_CONNECTED]
+        sendWsMessage(session, [status: "CONNECTED", code: StatusCodes.WS_CONNECTED])
         mqReceiver.subscribe(["$platformQueueName.$deviceId"], onMessageForDevice)
     }
 
@@ -98,7 +100,6 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         try {
             def message = MsgrUtils.parseMessageFromJson(textMessage.payload)
 
-            //TODO test for this
             //check if any device is connected to this node
             def localDevices = []
             GParsPool.withPool {
@@ -149,7 +150,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
             return true
         }
 
-        sendWsMessage session, [code: StatusCodes.WS_RECEIVED, title: title, body: body, notification: true]
+        sendWsMessage(session, [code: StatusCodes.WS_RECEIVED, title: title, body: body, notification: true])
     }
 
     @Override
@@ -167,7 +168,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
             return true
         }
 
-        sendWsMessage session, [code: StatusCodes.WS_RECEIVED, payload: payload, notification: false]
+        sendWsMessage(session, [code: StatusCodes.WS_RECEIVED, payload: payload, notification: false])
     }
 
     private boolean forwardMessage(MessageDto message, String type) {
@@ -201,7 +202,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
     }
 
     String getPlatformQueueName() {
-        WsController.PLATFORM_NAME
+        PLATFORM_NAME
     }
 
     @Override

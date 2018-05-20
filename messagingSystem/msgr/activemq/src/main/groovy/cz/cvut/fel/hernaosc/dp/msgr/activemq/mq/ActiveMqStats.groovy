@@ -1,6 +1,8 @@
 package cz.cvut.fel.hernaosc.dp.msgr.activemq.mq
 
+import cz.cvut.fel.hernaosc.dp.msgr.core.dto.MqStatsDto
 import cz.cvut.fel.hernaosc.dp.msgr.core.mq.IMqStats
+import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.management.JMSStatsImpl
 import org.apache.activemq.pool.PooledConnectionFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,10 +15,11 @@ class ActiveMqStats implements IMqStats {
     private PooledConnectionFactory connectionFactory
 
     @Override
-    def getStats() {
-        JMSStatsImpl mqStats = connectionFactory.connectionFactory.stats
+    MqStatsDto getStats() {
+        JMSStatsImpl mqStats = (connectionFactory.connectionFactory as ActiveMQConnectionFactory).stats as JMSStatsImpl
         def connections = mqStats.connections
         def sessions = mqStats.connections*.sessions.flatten()
-        [totalConnections: connections.size(), sessions: sessions.size(), origins: sessions*.consumers*.origin.flatten()]
+
+        new MqStatsDto(totalConnections: connections.size(), sessions: sessions.size(), origins: sessions*.consumers*.origin.flatten())
     }
 }

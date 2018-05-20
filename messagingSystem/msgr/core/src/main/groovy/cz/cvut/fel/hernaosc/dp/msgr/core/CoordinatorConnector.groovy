@@ -1,7 +1,6 @@
 package cz.cvut.fel.hernaosc.dp.msgr.core
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseDecorator
@@ -17,6 +16,7 @@ import javax.annotation.PostConstruct
 @Component
 @Slf4j
 class CoordinatorConnector {
+
     @Value('${msgr.node.id:#{null}}')
     private String nodeId
 
@@ -42,7 +42,7 @@ class CoordinatorConnector {
         }
     }
 
-    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(ApplicationReadyEvent)
     void connectToCoordinator() {
         def node = new MsgrNode(nodeId: nodeId, address: address)
         log.info "Connecting to Node Coordinator on address '$coordinatorAddress' as node $node"

@@ -24,8 +24,6 @@ public class MsgrClient {
 	private static final String POST = "POST";
 	private static final int HTTP_OK = 200;
 
-	private boolean android = false;
-
 	private String url;
 	private int serverRefresh = 30;
 
@@ -124,8 +122,9 @@ public class MsgrClient {
 	}
 
 	private ConnectionRequest buildConnectionRequest() {
-		if (platformName == null || platformName.length() == 0)
+		if (platformName == null || platformName.length() == 0) {
 			throw new RuntimeException("Platform is not set! You must set a platform before connecting.");
+		}
 
 		log.info("Building ConnectinRequest...");
 
@@ -202,10 +201,6 @@ public class MsgrClient {
 
 	public void setPlatformName(String platformName) {
 		this.platformName = platformName;
-	}
-
-	public boolean isAndroid() {
-		return android;
 	}
 
 	public void setToJson(Function<Object, String> toJson) {

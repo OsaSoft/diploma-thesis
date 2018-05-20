@@ -11,6 +11,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
+import org.springframework.beans.factory.BeanInitializationException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.io.ClassPathResource
@@ -54,8 +55,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
             Pushraven.accountFile = new ClassPathResource(serviceAccountFilename).file
             Pushraven.projectId = projectId
         } catch (IOException ex) {
-            log.error("Could dont find FCM service account file called '$serviceAccountFilename'", ex)
-            return
+            throw new BeanInitializationException("Could not find FCM service account file called '$serviceAccountFilename'", ex)
         }
 
         entityService.findOrCreateByName(PLATFORM_NAME, IPlatform)

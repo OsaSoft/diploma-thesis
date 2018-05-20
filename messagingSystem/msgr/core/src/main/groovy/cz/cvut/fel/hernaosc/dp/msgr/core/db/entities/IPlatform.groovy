@@ -3,17 +3,17 @@ package cz.cvut.fel.hernaosc.dp.msgr.core.db.entities
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.IEntity
 
 interface IPlatform extends IEntity {
-	String getName()
+    String getName()
 
-	void setName(String name)
+    void setName(String name)
 
-	boolean isStateless()
+    boolean isStateless()
 
     void setStateless(boolean stateless)
 
-	List<IDevice> getDevices()
+    List<IDevice> getDevices()
 
-	void setDevices(List<IDevice> devices)
+    void setDevices(List<IDevice> devices)
 
-	void addDevice(IDevice device)
+    void addDevice(IDevice device)
 }
