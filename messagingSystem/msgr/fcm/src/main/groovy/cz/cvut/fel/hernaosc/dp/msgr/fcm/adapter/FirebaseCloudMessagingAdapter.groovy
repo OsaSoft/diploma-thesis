@@ -9,6 +9,7 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.util.MsgrMessageUtils
 import groovy.util.logging.Slf4j
 import groovyx.gpars.GParsPool
 import org.springframework.beans.factory.BeanInitializationException
@@ -65,7 +66,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
 
     private onMessageForDevice = { String topic, messageText ->
         log.debug "Processing message $messageText"
-        def message = MsgrUtils.parseMessageFromJson(messageText)
+        def message = MsgrMessageUtils.parseMessageFromJson(messageText)
 
         def devices = deviceRepository.findAllByUserIdInAndPlatformName(message.targetUsers, PLATFORM_NAME)
 

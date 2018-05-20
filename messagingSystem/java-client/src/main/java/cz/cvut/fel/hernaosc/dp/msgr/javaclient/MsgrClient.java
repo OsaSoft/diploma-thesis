@@ -1,18 +1,27 @@
 package cz.cvut.fel.hernaosc.dp.msgr.javaclient;
 
+import cz.cvut.fel.hernaosc.dp.msgr.javaclient.ws.WsSocket;
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.ConnectionRequest;
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.MessageDto;
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto;
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.util.MsgrMessageUtils;
 import groovy.json.JsonBuilder;
 import groovy.json.JsonSlurper;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,6 +32,11 @@ public class MsgrClient {
 	private static final String JSON = "application/json";
 	private static final String POST = "POST";
 	private static final int HTTP_OK = 200;
+
+	private boolean websocket = false;
+	private boolean connected = false;
+	private WsSocket wsSocket = null;
+	private Consumer<String> wsMessageListener = null;
 
 	private String url;
 	private int serverRefresh = 30;
@@ -39,6 +53,8 @@ public class MsgrClient {
 
 	private Function<Object, String> toJson = (obj) -> new JsonBuilder(obj).toString();
 
+	private Map<String, Object> response = null;
+
 	public void init() throws IOException {
 
 		log.info("Connecting to " + url);
@@ -48,18 +64,36 @@ public class MsgrClient {
 			log.log(Level.SEVERE, "Could not find any nodes to connect to");
 			throw new IOException("Could not find any nodes to connect to");
 		}
+
+		if (websocket) {
+			connectWs();
+		}
+	}
+
+	public void disconnect() {
+		wsSocket.close();
 	}
 
 	public boolean send(MessageDto message) {
 		String type = message instanceof NotificationDto ? "notification" : "message";
 		boolean sent = false;
+		response = null;
 
 		try {
-			String address = getRandomAddress();
-			address = "http://" + address + "/send/" + type;
+			if (websocket) {
+				if (!connected) {
+					throw new IOException("Not connected to websocket!");
+				}
 
-			Object result = doRequest(POST, address, message);
-			if (result != null) {
+				sendWebsocket(message);
+			} else {
+				String address = getRandomAddress();
+				address = "http://" + address + "/send/" + type;
+
+				response = doRequest(POST, address, message);
+			}
+
+			if (response != null) {
 				log.info("Message successfully sent");
 				sent = true;
 			}
@@ -84,19 +118,39 @@ public class MsgrClient {
 	}
 
 	private void refreshNodes() throws IOException {
-		String fullIUrl = url + "/connect";
-		Map<String, Object> result = doRequest(POST, fullIUrl, buildConnectionRequest());
-		if (result != null) {
-			log.info("Received result " + result);
+		String fullIUrl = "http://" + url + "/connect";
+		response = doRequest(POST, fullIUrl, buildConnectionRequest());
+		if (response != null) {
+			log.info("Received result " + response);
 
-			addresses = (List<String>) result.get("addresses");
+			addresses = (List<String>) response.get("addresses");
 			lastUpdate = new Date().getTime();
 
-			setData((Map) result.get("deviceData"));
+			setData((Map) response.get("deviceData"));
 			log.info("Received node IPs: " + addresses);
 		} else {
 			throw new IOException("Could not connect to " + url);
 		}
+	}
+
+	private void connectWs() throws IOException {
+		String fullUrl = "ws://" + url + "/ws/" + getDeviceId();
+		WebSocketClient webSocketClient = new WebSocketClient();
+		wsSocket = new WsSocket(wsMessageListener, (closeCode) -> connected = false);
+
+		try {
+			webSocketClient.start();
+			URI endpoint = new URI(fullUrl);
+			ClientUpgradeRequest upgradeRequest = new ClientUpgradeRequest();
+			Future<Session> connectionFuture = webSocketClient.connect(wsSocket, endpoint, upgradeRequest);
+			//block until we are connected
+			connectionFuture.get(10, TimeUnit.SECONDS);
+
+			connected = true;
+		} catch (Exception ex) {
+			throw new IOException("Failed to connect to websocket. Reason: " + ex.getMessage(), ex);
+		}
+
 	}
 
 	private Map<String, Object> doRequest(String method, String fullUrl, Object objToSend) throws IOException {
@@ -121,8 +175,19 @@ public class MsgrClient {
 		}
 	}
 
+	private void sendWebsocket(MessageDto objToSend) throws IOException {
+		Map<String, Object> msgMap = new HashMap<>();
+		msgMap.put("payload", objToSend);
+		msgMap.put("notification", objToSend instanceof NotificationDto);
+		String payload = toJson.apply(msgMap);
+
+		log.info("Sending payload: " + payload);
+
+		wsSocket.send(payload);
+	}
+
 	private ConnectionRequest buildConnectionRequest() {
-		if (platformName == null || platformName.length() == 0) {
+		if (!isWebsocket() && (platformName == null || platformName.length() == 0)) {
 			throw new RuntimeException("Platform is not set! You must set a platform before connecting.");
 		}
 
@@ -133,7 +198,7 @@ public class MsgrClient {
 		request.setDeviceToken(deviceToken);
 		request.setUserId(userId);
 		request.setUserName(userName);
-		request.setPlatformName(platformName);
+		request.setPlatformName(getPlatformName());
 
 		log.info("Done building ConnectionRequest: " + request);
 
@@ -196,7 +261,7 @@ public class MsgrClient {
 	}
 
 	public String getPlatformName() {
-		return platformName;
+		return isWebsocket() ? "websocket" : platformName;
 	}
 
 	public void setPlatformName(String platformName) {
@@ -205,5 +270,25 @@ public class MsgrClient {
 
 	public void setToJson(Function<Object, String> toJson) {
 		this.toJson = toJson;
+	}
+
+	public boolean isWebsocket() {
+		return websocket;
+	}
+
+	public void setWebsocket(boolean websocket) {
+		this.websocket = websocket;
+	}
+
+	public boolean isConnected() {
+		return connected;
+	}
+
+	public Object getResponse() {
+		return response;
+	}
+
+	public void setWsMessageListener(Consumer<String> wsMessageListener) {
+		this.wsMessageListener = wsMessageListener;
 	}
 }

@@ -2,6 +2,7 @@ package cz.cvut.fel.hernaosc.dp.msgr.core.util
 
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.DataMessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.util.MsgrMessageUtils
 import groovy.json.JsonBuilder
 import spock.lang.Specification
 
@@ -25,7 +26,7 @@ class MsgrUtilsTest extends Specification {
             def jsonMessage = new JsonBuilder([notification: true, payload: notification]).toString()
 
         when:
-            def message = (NotificationDto) MsgrUtils.parseMessageFromJson(jsonMessage)
+            def message = (NotificationDto) MsgrMessageUtils.parseMessageFromJson(jsonMessage)
         then:
             message.title == notification.title
             message.body == notification.body
@@ -46,7 +47,7 @@ class MsgrUtilsTest extends Specification {
             def jsonMessage = new JsonBuilder([notification: false, payload: dataMessage]).toString()
 
         when:
-            def message = (DataMessageDto) MsgrUtils.parseMessageFromJson(jsonMessage)
+            def message = (DataMessageDto) MsgrMessageUtils.parseMessageFromJson(jsonMessage)
         then:
             dataMessage.content.keySet().every { message.content.containsKey(it) }
             message.targetDevices.containsAll(dataMessage.targetDevices)

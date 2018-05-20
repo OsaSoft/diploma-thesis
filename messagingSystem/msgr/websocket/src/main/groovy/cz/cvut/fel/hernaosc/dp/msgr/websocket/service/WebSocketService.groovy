@@ -9,9 +9,9 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.platform.IPlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.platform.PlatformAdapter
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IEntityService
 import cz.cvut.fel.hernaosc.dp.msgr.core.service.IMessagingService
-import cz.cvut.fel.hernaosc.dp.msgr.core.util.MsgrUtils
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.MessageDto
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
+import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.util.MsgrMessageUtils
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.util.JsonMessage
 import groovy.json.JsonException
@@ -74,7 +74,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
     }
 
     private onMessageForDevice = { String topic, String messageText ->
-        def message = MsgrUtils.parseMessageFromJson(messageText)
+        def message = MsgrMessageUtils.parseMessageFromJson(messageText)
         def deviceId = topic - "${platformQueueName}."
 
         message instanceof NotificationDto ? sendNotification(message.title, message.body, deviceId) : sendMessage(message.content, deviceId)
@@ -98,7 +98,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Message received in session '${session?.id}': $textMessage.payload"
 
         try {
-            def message = MsgrUtils.parseMessageFromJson(textMessage.payload)
+            def message = MsgrMessageUtils.parseMessageFromJson(textMessage.payload)
 
             //check if any device is connected to this node
             def localDevices = []

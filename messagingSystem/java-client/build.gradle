@@ -21,6 +21,7 @@ repositories {
 
 dependencies {
     compile 'org.codehaus.groovy:groovy-json:2.4.13'
+    compile group: 'org.eclipse.jetty.websocket', name: 'websocket-client', version: '9.4.10.v20180503'
 
     compile files('lib/message-common-0.0.1-SNAPSHOT.jar')
 

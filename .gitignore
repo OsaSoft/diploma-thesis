@@ -31,3 +31,7 @@ messagingSystem/MsgrChattr/.idea/
 messagingSystem/MsgrChattr/app/build/
 messagingSystem/MsgrChattr/.gradle/
 messagingSystem/MsgrChattr/local.properties
+messagingSystem/PerformanceTester/.gradle/
+messagingSystem/PerformanceTester/.idea/
+messagingSystem/PerformanceTester/gradle/
+messagingSystem/PerformanceTester/out/
