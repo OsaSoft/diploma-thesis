@@ -29,3 +29,5 @@ spring.activemq.user=
 spring.activemq.password=
 # maximum number of connections to ActiveMQ. Max 500 sessions per connection. (Default 1)
 msgr.activemq.max.connections=
+# message time to live in ActiveMQ, in miliseconds. Default 108000ms (30 minutes)
+msgr.activemq.message.ttl=

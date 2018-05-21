@@ -1,5 +1,6 @@
 package cz.cvut.fel.hernaosc.dp.msgr.perftest.test
 
+import cz.cvut.fel.hernaosc.dp.msgr.javaclient.MsgrClient
 import cz.cvut.fel.hernaosc.dp.msgr.messagecommon.dto.message.NotificationDto
 import cz.cvut.fel.hernaosc.dp.msgr.perftest.Util
 import cz.cvut.fel.hernaosc.dp.msgr.websocket.common.consts.StatusCodes
@@ -7,6 +8,7 @@ import groovy.json.JsonSlurper
 
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
 
 class ConnectionTest implements Runnable {
     static username = "connection-test"
@@ -26,6 +28,7 @@ class ConnectionTest implements Runnable {
         long finishTime = -1
 
         def client = Util.buildBaseClient(url, true)
+        MsgrClient.setLoggerLevel(Level.SEVERE)
 
         client.deviceToken = "con-test-device"
         client.userName = username
@@ -39,9 +42,7 @@ class ConnectionTest implements Runnable {
         }
 
         client.init()
-        println "Sending message...."
 
-        def start = System.currentTimeSeconds()
         def msg = new NotificationDto(title: "test", body: "this is a test")
 
         switch (target) {
@@ -57,6 +58,8 @@ class ConnectionTest implements Runnable {
                 break
         }
 
+        println "Sending message...."
+        def start = System.currentTimeSeconds()
         client.send(msg)
 
         def result = latch.await(10, TimeUnit.SECONDS)
@@ -68,7 +71,5 @@ class ConnectionTest implements Runnable {
         }
 
         client.disconnect()
-        //keeps hanging here for some reason...
-        System.exit(0)
     }
 }

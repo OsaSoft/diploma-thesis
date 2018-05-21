@@ -93,6 +93,7 @@
         }
 
         if (!(message.targetDevices.includes(MSGR.deviceId) || message.targetUsers.includes(MSGR.userId))) {
+            //TODO: add the user, so he receives the message he sent on all his devices
             message.targetDevices.push(MSGR.deviceId);
         }
 

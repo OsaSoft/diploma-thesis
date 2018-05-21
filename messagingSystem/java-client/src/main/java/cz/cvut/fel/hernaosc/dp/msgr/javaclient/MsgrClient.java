@@ -35,6 +35,7 @@ public class MsgrClient {
 
 	private boolean websocket = false;
 	private boolean connected = false;
+	private WebSocketClient webSocketClient = null;
 	private WsSocket wsSocket = null;
 	private Consumer<String> wsMessageListener = null;
 
@@ -55,6 +56,10 @@ public class MsgrClient {
 
 	private Map<String, Object> response = null;
 
+	public static void setLoggerLevel(Level level) {
+		log.setLevel(level);
+	}
+
 	public void init() throws IOException {
 
 		log.info("Connecting to " + url);
@@ -71,7 +76,12 @@ public class MsgrClient {
 	}
 
 	public void disconnect() {
-		wsSocket.close();
+		if (wsSocket != null) wsSocket.close();
+		try {
+			if (webSocketClient != null) webSocketClient.stop();
+		} catch (Exception ex) {
+			log.log(Level.SEVERE, "Exception stopping WS client: " + ex.getMessage(), ex);
+		}
 	}
 
 	public boolean send(MessageDto message) {
@@ -134,8 +144,8 @@ public class MsgrClient {
 	}
 
 	private void connectWs() throws IOException {
-		String fullUrl = "ws://" + url + "/ws/" + getDeviceId();
-		WebSocketClient webSocketClient = new WebSocketClient();
+		String fullUrl = "ws://" + getRandomAddress() + "/ws/" + getDeviceId();
+		webSocketClient = new WebSocketClient();
 		wsSocket = new WsSocket(wsMessageListener, (closeCode) -> connected = false);
 
 		try {
