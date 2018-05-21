@@ -13,7 +13,6 @@ buildscript {
 apply plugin: 'groovy'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 group = 'cz.cvut.fel.hernaosc.dp.msgr'
@@ -36,4 +35,8 @@ dependencies {
     testCompile 'org.spockframework:spock-spring:1.1-groovy-2.4-rc-4'
     testRuntime "net.bytebuddy:byte-buddy:1.6.5"          // allows mocking of classes (in addition to interfaces)
     testRuntime "org.objenesis:objenesis:2.5.1" // allows mocking of classes without default constructor (together with CGLIB)
+}
+
+dependencyManagement {
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
 }

@@ -24,13 +24,12 @@ repositories {
 	mavenCentral()
 }
 
-
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('org.codehaus.groovy:groovy-all:2.4.13')
 
 	//msgr modules
-	compile project(":core")
+	compile project(":core") 
 	compile project(":fcm")
 	compile project(":mysql")
 	compile project(":websocket")

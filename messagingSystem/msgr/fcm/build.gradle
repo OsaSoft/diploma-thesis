@@ -16,7 +16,6 @@ version '0.0.1-SNAPSHOT'
 apply plugin: 'groovy'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 repositories {
@@ -38,4 +37,8 @@ dependencies {
     testRuntime "org.objenesis:objenesis:2.5.1" // allows mocking of classes without default constructor (together with CGLIB)
 
     testCompile("com.h2database:h2")
+}
+
+dependencyManagement {
+    imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
 }
