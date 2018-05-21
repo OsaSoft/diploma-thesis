@@ -31,6 +31,9 @@ class EntityServiceTest extends ContextAwareTest {
     }
 
     void cleanup() {
+        ["device", "group","platform","user"].each { repoName ->
+            this."${repoName}Repository".deleteAll()
+        }
     }
 
     @Unroll
