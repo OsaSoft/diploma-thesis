@@ -126,7 +126,7 @@ A more concrete version of the tiered architecture for the full sample implement
 \clearpage
 
 \subsection{Data Tier} \label{design:data-layer}
-The \textit{Data Tier} is used to persistently store data regarding how messages should be handled and how they are to be delivered to their intended recipient. After analysing the necessary requirements, the data to be stored has been divided into the following entities.
+The \textit{Data Tier} is used to persistently store data describing how messages should be handled and how they are to be delivered to their intended recipient. After analysing the necessary requirements, the data to be stored has been divided into the following entities.
 \begin{itemize}
 \item \textbf{Group:} The Group entity represents a collection of Users, aggregated for some reason, eg. all users of an application, members of a chatroom, etc.
 \item \textbf{User:} The User entity represents an end user of the application using the system. A User can belong to Groups and has Devices.
@@ -146,7 +146,7 @@ In the sample implementation, which is part of this thesis, a relational databas
     \label{fig:orm}
 \end{figure}
 
-\subsection{Business Tier}
+\subsection{Business Tier} \label{design:business-tier}
 The \textit{Business Tier}, also commonly known as the \textit{Business Process Tier} or \textit{Business Logic Layer}, is where all the main functions of the system are done. Here the messages are received, processed and passed along to either the message queue or the respective adapters for the target device's platform\footnote{More on adapters in Section \ref{sec:adapters}}.
 
 Figure ~\ref{fig:msg-flow} shows a simplified representation of the flow of a message through the Business Tier. The message starts in the \textit{Client Tier}, where one of the clients sends it. After being received through the system's API it is processed and passed to the MessagingService, which communicates with the Data layer to find information on the target group, user or device and the platforms associated with them. After this, the message is passed into the message queue in the \textit{Collaboration Tier}, from which individual Nodes, subscribed to their relevant channels, receive the messages into the proper platform adapters. From here, the message is sent out to the end devices, in the \textit{Client Tier}.
@@ -191,7 +191,7 @@ The Web client is a Javascript library application, its overall design very simi
 
 \section{Modularity Design}
 
-A critical part of the requirements put onto the system is its high flexibility and adaptability, based on high modularity. For this reason, the system has been designed with maximum modularity in mind. In order to achieve this, the main system is contained in a Core module, which will be the basis for any full applications with the system. Functionality and components that may be interchanged depending on the applications' needs are contained in individual modules, which can be added to the full application as further dependencies (together with the Core module). An example of an application with different modules can be seen in Figure \ref{fig:s-impl-comps}, which shows the basic module structure used in the Sample Implementation.
+A critical part of the requirements put onto the system is its high flexibility and adaptability, based on high modularity. For this reason, the system has been designed in order to reach maximum modularity. In order to achieve this, the main system is contained in a Core module, which will be the basis for any full applications with the system. Functionality and components that may be interchanged depending on the applications' needs are contained in individual modules, which can be added to the full application as further dependencies (together with the Core module). An example of an application with different modules can be seen in Figure \ref{fig:s-impl-comps}, which shows the basic module structure used in the Sample Implementation.
 
 \begin{figure}[H]
 	\centering
@@ -226,12 +226,12 @@ The system's access to the \textit{Data Tier} has been designed in a fully modul
 
 Any module that wishes to implement access to a database must create JPA Entities implementing the entity interfaces and create interfaces that extend the repository interfaces and extend Spring Data's \textit{CrudRepository} interface. This will indicate to the Spring Context to instantiate repository Beans based on these interfaces\cite{spring-repos}, which the Context will then inject into the Beans where they are used.
 
-\subsection{Platform Modularity}
+\subsection{Platform Modularity} \label{design:platform-modularity}
 One of the key features of the system is its multi-platform support. In order to be able to support the widest possible range of platforms, the platform portion of the system had to be designed with complete modularity in mind. The results of the design choices made based on these requirements led to the creation of the \textit{IPlatformAdapter} interface and \textit{@PlatformAdapter} annotations, which can be seen in more detail in Figure \ref{fig:core-platform-module}.
 
 \begin{figure}[!htb]
 	\centering
-	\includegraphics[width=0.95\textwidth]{figures/03_design/core-platform-module}
+	\includegraphics[width=0.8\textwidth]{figures/03_design/core-platform-module}
     \caption{Interfaces for platform modules in the \textit{core.platform} package}
     \label{fig:core-platform-module}
 \end{figure}
@@ -243,7 +243,7 @@ Platform Adapters are Spring Managed Beans that implement the Core module's \tex
 
 Adapters are automatically found at system startup by the Core module's \textit{AdapterService} using Spring's Application Context and registered based on the platform's name, as specified in the \textit{@PlatformAdapter} annotation. The sequence of these events including an example message being sent can be seen illustrated in Figure \ref{fig:adapter-flow}
 
-The platform adapters need to subscribe to their relevant queues/topics in the message queue, using the \textit{IReceiver} bean (see Section \ref{design:mq-modularity} \nameref{design:mq-modularity}). The timing of when to subscribe is up to the adapter, as it may differ based on the platform it is for. For example for the FCM platform, the adapter subscribes after its initialization, while the websocket adapter subscribes after a device is bound to it.
+The platform adapters need to subscribe to their relevant queues/topics in the message queue, using the \textit{IReceiver} bean (see Section \ref{design:mq-modularity} \nameref{design:mq-modularity}). The timing of when to subscribe is up to the adapter, as it may differ based on the platform's needs. For example for the FCM platform, the adapter subscribes after its initialization, while the websocket adapter subscribes after a device is bound to it.
 
 \begin{figure}[!ht]
 	\centering

@@ -6,7 +6,7 @@ This chapter describes the problem that this thesis addresses, as well as its co
 
 Communication over networks is increasing greatly, not only user-to-user and user-to-machine interactions, but a massive growth has also occurred in machine-to-machine communication due to more automation, the usage of microservices architectures, system distribution and software and platform provided as a service (SaaS and PaaS, respectively).
 
-These developments have led to changing requirements in the speed, volume and reliability of data delivery. The need has risen for fast, lightweight, and secure real-time communication solutions.
+These developments have led to changing requirements in the speed, volume, and reliability of data delivery. The need has risen for fast, lightweight, and secure real-time communication solutions.
 
 The main difference between a traditional and real-time client-server\footnote{Please note that client-server terminology is meant as someone who connects (client) to someone who provides data (server). The client can be another server-side application.} communication is that traditionally, the server would respond to a request from the client, be it synchronously or asynchronously. This communication happens over what is basically a one way channel. When the client would expect new data from the server, it would request it again, repeating the process.
 
@@ -118,7 +118,7 @@ Pusher offers a tier-based model similar to PubNub
 \subsection{OneSignal}
 OneSignal\footnote{OneSignal <\url{https://onesignal.com/}>} is a commercial closed-source high volume push notification delivery service. Compared to PubNub, Ably or Pusher, OneSignal specializes in push notifications for mobile apps, though it does also support web notifications. This fact restricts the amount of platforms OneSignal can be used on in a significant manner.
 
-While all over-the-network communication with OneSignal and then Apple/Android servers is done over HTTPS, compared to the aforementioned services it does not support end-to-end encryption out of the box\cite{onesignal-https}. This can however be implemented on a server-client basis, ie. encrypt message before sending to OneSignal and then decrypt in app on target device. This method however couldn't be used to send notifications through OneSignal's useful dashboard.
+While all over-the-network communication with OneSignal and then Apple/Android servers is done over HTTPS, compared to the aforementioned services it does not support end-to-end encryption out of the box\cite{onesignal-https}. However, this can be implemented on a server-client basis, ie. encrypt message before sending to OneSignal and then decrypt in app on target device, although this method couldn't be used to send notifications through OneSignal's useful dashboard.
 
 OneSignal provides SDKs for many cross-platform mobile development environments such as Unity, PhoneGap, React Native, Xamarin, and others.
 
@@ -184,7 +184,7 @@ However, all of the compared solutions are closed source and provide no means of
 
 \section{Requirement Analysis (Core System)}
 
-After careful analysis of what is expected of the system, the following requirements are put in place. These requirements are split into two categories, functional and non-functional requirements.
+After thorough analysis of what is expected of the system, the following requirements are put in place. These requirements are split into two categories, functional and non-functional requirements.
 
 \subsection{Functional Requirements}
 Functional requirements define the behaviour of the system.
@@ -256,7 +256,7 @@ iOS\footnote{iOS <\url{https://www.apple.com/lae/ios/ios-11/}>} is a mobile oper
 Development for iOS can be done using Xcode, Apple’s Integrated Development Environment (IDE). While previously iOS apps were built mostly using Objective-C, Apple has been pushing forward their Swift\footnote{Swift <\url{https://developer.apple.com/swift/}>} language as the future of iOS (and MacOS) app development.
 
 \subsubsection*{Choice of mobile platform for implementation}
-The mobile platform chosen for the implementation is Android. Not only does Android possess the lion's share of the market, its accessibility and openness to developers is a great advantage. In order to develop an application for Andorid, the developer only needs to download the Android Studio IDE and Android SDK, which are both available for Windows, Mac, and Linux. No physical device is needed for running the application during development, as the SDK contains a powerful emulator. For developing on a physical Android device, the developer can easily turn the device into development mode in the device's settings. 
+The mobile platform chosen for the implementation is Android. Not only does Android possess the majority share of the market, its accessibility and openness to developers is a great advantage. In order to develop an application for Andorid, the developer only needs to download the Android Studio IDE and Android SDK, which are both available for Windows, Mac, and Linux. No physical device is needed for running the application during development, as the SDK contains a powerful emulator. For developing on a physical Android device, the developer can easily turn the device into development mode in the device's settings. 
 
 Developing Android applications and distributing them through own means is completely free. However, most applications are published to Google's official marketplace, Google Play, for which Google has a one time \$25 USD registration fee\cite{google-play-fee}, after which the developer may publish any number of applications on the marketplace.
 
@@ -269,9 +269,9 @@ Java\footnote{Java <\url{https://www.java.com/}>} is a popular language owned by
 Although nowadays it is one of the most popular platforms for developing enterprise server applications, owing to its large community support including extensive libraries, frameworks and platform independence, it can also be used to develop traditional desktop applications, both console based and with a Graphical User Interface (GUI).
 
 \subsection{Web}
-Frontend web applications based on HTML, CSS and JavaScript\footnote{HTML <\url{https://www.w3.org/wiki/The_web_standards_model_-_HTML_CSS_and_JavaScript/}>} as more full fledged and interactive applications, compared to the static web sites of the past, have been gaining on popularity. This is partly thanks to modern browsers and faster internet bandwidths and speeds and partly due to an explosion of powerful JavaScript-based frameworks and libraries facilitating the development of extensive, interactive applications that run inside a user's web browser.
+Frontend web applications based on HTML, CSS and JavaScript\footnote{HTML <\url{https://www.w3.org/wiki/The_web_standards_model_-_HTML_CSS_and_JavaScript/}>} as more full fledged and interactive applications, compared to the static web sites of the past, have been gaining on popularity. This is partly due to modern browsers and faster internet bandwidths and speeds and partly due to a boom in powerful JavaScript-based frameworks and libraries facilitating the development of extensive, interactive applications that run inside a user's web browser.
 
-A large number of applications have been moving some and in cases even most of their application logic from backend servers to clients in web browsers. In order for these applications to be responsive and interactive, it is paramount to have real-time reliable communication with any components that are on a remote server.
+A large number of applications have been moving some and in cases even most of their application logic from backend servers to clients in web browsers. In order for these applications to be responsive and interactive, it is key to have real-time reliable communication with any components that are on a remote server.
 
 \section{Analysis of Solutions for Implementation}
 In order for the implementation of the core system to meet all of its requirements, a careful and well-informed choice of the proper tools is paramount. This section describes the chosen tools as well as elaborates on the reasons as to why these tools were chosen.
@@ -356,7 +356,7 @@ FCM also provides powerful HTTP and XMPP (Extensible Messaging and Presence Prot
 \item Normal and High priority message setting.
 \item Message Time to Live (TTL).
 \item HTTP and XMPP APIs.
-\item Free.
+\item Free of charge.
 \end{itemize}
 
 Firebase Cloud Messaging is used in the sample implementation to relay messages onto the Android platform.

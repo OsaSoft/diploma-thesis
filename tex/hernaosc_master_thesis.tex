@@ -58,7 +58,6 @@
 \newcommand\FirstandFamilyName{Bc. Oscar Hernández}
 \newcommand\Supervisor{Ing. Martin Mudra}
 
-
 % Pouzijete-li pdflatex, tak je prijemne, kdyz bude mit vase prace
 % funkcni odkazy i v pdf formatu
 \usepackage[
@@ -218,13 +217,20 @@ Cílem aplikace je sloužit jako základ pro využití v moderních aplikacích.
 
 %*****************************************************************************
 
+\lstset{
+    string=[s]{"}{"},
+    stringstyle=\color{blue},
+    comment=[l]{:},
+    commentstyle=\color{black},
+    }
+
 \include{chapters/01_introduction}
 
 \include{chapters/02_analysis}
 
 \include{chapters/03_design}
 
-% \include{chapters/04_implementation}
+\include{chapters/04_implementation}
 
 % \include{chapters/05_testing}
 
