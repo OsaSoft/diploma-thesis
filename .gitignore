@@ -35,3 +35,6 @@ messagingSystem/PerformanceTester/.gradle/
 messagingSystem/PerformanceTester/.idea/
 messagingSystem/PerformanceTester/gradle/
 messagingSystem/PerformanceTester/out/
+messagingSystem/msgr/hernandez-dp-firebase-adminsdk-un149-1017971903.json
+*.lock
+messagingSystem/~$perf-results.xlsx

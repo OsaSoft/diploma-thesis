@@ -1,35 +1,34 @@
 \chapter{Analysis}\label{chap:analysis}
 
-This chapter describes the problem that this thesis addresses, as well as some existing solutions. It also specifies the functional and non-functional requirements of the system to be implemented to address the problem and some of the platforms it will be implemented on.
+This chapter describes the problem that this thesis addresses, as well as its comparison to selected existing solutions. It also specifies the functional and non-functional requirements of the system to be implemented to address the specified problem, as well as a selection of platforms it will be implemented on in order to demonstrate its functionality.
 
 \section{Problem Analysis}
-The problem of real-time communication is increasingly important as bandwidth and connections speeds increase, allowing for more interactivity between users and computer systems. More and more systems require increasing amounts of communication in this age of and ever increasing number of web-based applications taking the place of traditional desktop ones. With services feeding customized content to a large number of different users in a more interactive and immediate manner, traditional methods prove too slow and cumbersome.
 
-However, not only user-to-user and user-to-machine interactions are increasing greatly, a massive growth has occurred in machine-to-machine communication due to more automation, usage of microservices, system distribution and software and platform provided as a service (SaaS and PaaS respectively).
+Communication over networks is increasing greatly, not only user-to-user and user-to-machine interactions, but a massive growth has also occurred in machine-to-machine communication due to more automation, the usage of microservices architectures, system distribution and software and platform provided as a service (SaaS and PaaS, respectively).
 
-These developments have led to changing requirements in the speed, volume and reliability in data delivery. The need has risen for fast and lightweight and secure real-time communication solutions.
+These developments have led to changing requirements in the speed, volume and reliability of data delivery. The need has risen for fast, lightweight, and secure real-time communication solutions.
 
-The main difference between a traditional and realtime client-server\footnote{Please note that client-server terminology is meant as someone who connects (client) to someone who provides data (server). The client can be another server-side application.} communication is that traditionally, the server would respond to a request from the client, be it synchronously or asynchronously. This communication happens over what is basically a one way channel. When the client would expect new data from the server, it would poll at intervals for new data. 
+The main difference between a traditional and real-time client-server\footnote{Please note that client-server terminology is meant as someone who connects (client) to someone who provides data (server). The client can be another server-side application.} communication is that traditionally, the server would respond to a request from the client, be it synchronously or asynchronously. This communication happens over what is basically a one way channel. When the client would expect new data from the server, it would request it again, repeating the process.
 
-During realtime communication on the other hand, a two way channel is kept open between the client and server and data is send and received both ways when needed, usually in an asynchronous fashion. See Figures ~\ref{fig:traditional-communication} and ~\ref{fig:realtime-communication-pattern}.
+During real-time communication, on the other hand, a two way channel is kept open between the client and server and data is sent and received both ways when needed, usually in an asynchronous fashion. See Figures ~\ref{fig:traditional-communication} and ~\ref{fig:realtime-communication-pattern}.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.65\textwidth]{figures/02_analysis/Traditional-communication-pattern}
+	\includegraphics[width=0.68\textwidth]{figures/02_analysis/Traditional-communication-pattern}
     \caption{Traditional client-server communication pattern}
     \label{fig:traditional-communication}
 \end{figure}
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.65\textwidth]{figures/02_analysis/Realtime-communication-pattern}
+	\includegraphics[width=0.68\textwidth]{figures/02_analysis/Realtime-communication-pattern}
     \caption{Realtime client-server communication pattern}
     \label{fig:realtime-communication-pattern}
 \end{figure}
 
-While the basic pattern appears simple, the situation complicates quickly once taken into account, that systems need to deliver realtime data to a large number of devices, often running on different platforms (eg. iOS and Android apps) and during periods of non-connectivity, such as a mobile device losing reception. 
+While the basic pattern appears simple, the situation quickly begins to complicate once the facts that systems need to deliver realtime data to a large number of devices, often running on different platforms (eg. mobile or web platforms) and that devices may have periods of non-connectivity, such as a mobile device losing reception, are taken into account.
 
-A very simple example of such a situation can be seen in Figure ~\ref{fig:example-situation}. A service needs to send two different messages to two groups of users, that are using different platforms and some of them even have multiple devices at once (eg. an iPad and Android phone) and the message needs to be delivered to all of these. For simplicity, Figure ~\ref{fig:example-situation} only illustrates a one way message delivery, but for true interactivity such a system must be able to also receive data, not just send it.
+A very simple example of such a situation can be seen in Figure ~\ref{fig:example-situation}. A service needs to send two different messages to two groups of users, that are using different platforms and some of them even have multiple devices at once (eg. a web application in a browser on their computer and a smart phone) and the message needs to be delivered to all of these. For simplicity, only a one way message delivery is illustrated, but for true interactivity such a system must be able to also receive data, not just send it.
 
 \begin{figure}[H]
 	\centering
@@ -41,60 +40,60 @@ A very simple example of such a situation can be seen in Figure ~\ref{fig:exampl
 \section{Existing Similar Solutions} \label{sec:similar-solutions}
 At the moment there are several products on the market that provide messaging with differing capabilities and pricing strategies.
 
-Henceforth will be described an overview of some of the most popular ones at the time of writing, based on information provided in marketing materials, documentations and FAQs\footnote{Frequently Asked Questions}. An in-depth comparison of the inner workings of these is very hard, since they all operate on a closed-source basis and do not disclose much information regarding the inner workings of their algorithms and data structures. Furthermore, they are all provided as a service, without a possibility of self-deployment.
+Henceforth will be described an overview of some of the most popular ones at the time of writing, based on information provided in marketing materials, documentations and FAQs (Frequently Asked Questions). An in-depth comparison of the inner workings of these is not included, since all of the solutions in question operate on a closed-source basis and do not disclose much information regarding the inner workings of their algorithms and data structures. Furthermore, they are all provided as a service, without a possibility of self-deployment, so a comparison of their performance cannot be made on similar hardware.
 
 \subsection{PubNub}
 PubNub\footnote{PubNub <\url{https://www.pubnub.com/}>} is a commercial realtime messaging service based on a Publish-Subscribe pattern. One of the largest messaging service providers in the world, PubNub boasts, among others, secure end-to-end encryption, unlimited number of channels and 250ms latencies worldwide~\protect\cite{pubnub-messaging} and with over 70+ SDKs\footnote{PubNub SDK full list <\url{https://www.pubnub.com/docs}>} can be used on virtually any platform.
 
-Key features:
+\subsubsection*{Key features:}
 \begin{itemize}
 \item Unlimited Publish/Subscribe channels~\protect\cite{pubnub-messaging} (technically, though device and message amounts are limited with tier-based pricing)
 \item 250ms latency worldwide~\protect\cite{pubnub-messaging}
 \item Push notification support for Android, iOS and Windows
-\item Message delivery once target device comes online (catch-up) as long as message is still in queue. Messages are held in the queue by default for approximately 5 minutes or 100 messages, but can be extended using Storage add-on.~\protect\cite{pubnub-catchup}
+\item Message delivery once target device comes online (catch-up) as long as message is still in queue. Messages are held in the queue by default for approximately 5 minutes or 100 messages (whichever is reached first), but can be extended using the Storage add-on.~\protect\cite{pubnub-catchup}
 \end{itemize}
 
-Pricing\footnote{As of January 3 2018} (monthly):
+\subsubsection*{Pricing\footnote{As of January 3 2018} (monthly):}
 \begin{itemize}
 \item Free: allows 100 daily active devices and 1 million total messages
-\item \$49: 500 devices
-\item \$149: 1 500 devices
-\item \$399: 5 000 devices
-\item \$799: 20 000 devices
+\item \$49: 500 daily active devices
+\item \$149: 1 500 daily active devices
+\item \$399: 5 000 daily active devices
+\item \$799: 20 000 daily active devices
 \end{itemize}
 
 \subsection{Ably}
-Ably\footnote{Ably <\url{https://www.ably.io/}>} is a commercial realtime data delivery platform based on a Publish-Subscribe pattern. Apart from several client libraries including ones for Javascript, Java, Python, PHP and others\footnote{Ably Download<\url{https://www.ably.io/download}>}. Ably provides WebSocket and REST based APIs.~\protect\cite{ably-docs} Like PubNub, Ably also provides secure end-to-end encryption.
+Ably\footnote{Ably <\url{https://www.ably.io/}>} is a commercial real-time data delivery platform based on a Publish-Subscribe pattern, similarly to PubNub. Apart from several client libraries including ones for Javascript, Java, Python, PHP and others\cite{ably-sdk}, Ably provides WebSocket and REST based APIs~\protect\cite{ably-docs}. Just like PubNub, Ably also provides secure end-to-end encryption.
 
-Key features:
+\subsubsection*{Key features:}
 \begin{itemize}
 \item Presence awareness, ie. notification when a device becomes online or offline
-\item Access to channel message history where messages are stored for 24-72 hours~\protect\cite{ably-history} with persisted history enabled, or 2 minutes otherwise
+\item Messages are stored for redelivery for 2 minutes by default. It can however be expanded with the channel message history where messages are stored for up to 24-72 hours~\protect\cite{ably-history} with persisted history enabled.
 \item Binary encoded messages help reduce bandwidth and streamlines processing time for encoding and decoding messages~\protect\cite{ably-bin-enc}
 \item Message and worker queues
 \item Reliable message ordering~\protect\cite{ably-order} - devices are guaranteed to receive messages in the order they were sent
-\item WebHooks
+\item WebHooks, which are essentialy HTTP callbacks
 \item Simple WebSocket and REST APIs allow for easy client implementation for platforms other than officially supported
-\item Protocol adapters providing interoperability between other realtime and queuing protocols~\protect\cite{ably-adapters}
+\item Protocol adapters providing interoperability between other real-time and queuing protocols~\protect\cite{ably-adapters}
 \end{itemize}
 
-Pricing\footnote{As of January 3 2018}:
+\subsubsection*{Pricing\footnote{As of January 3 2018} (monthly):}
 
 Unlike PubNub's tier-based monthly pricing system, Ably provides a more flexible monetization model:
 \begin{itemize}
-\item Free: 100 peak connections and channels, 3 million monthly messages
-\item Self-service: \$12.50 per thousand peak connections or channels, \$1.25 per million messages, volume discounts
+\item Free: 100 peak connections(see Figure ~\ref{fig:peak-conns} ) and channels, 3 million monthly messages
+\item Self-service: \$12.50 per thousand peak connections or channels, \$1.25 per million messages. Volume discounts possible
 \item Enterprise: tailored package with premium support and no hard limits
 \end{itemize}
 
 \subsection{Pusher}
-Pusher\footnote{Pusher <\url{https://pusher.com/}>} is a commercial realtime messaging service based on a Publish-Subscribe pattern. Pusher provides WebSocket and HTTP APIs for message publishing. Like all previously mentioned services, Pusher also supports end-to-end encryption.
+Pusher\footnote{Pusher <\url{https://pusher.com/}>} is a commercial real-time messaging service, also based on a Publish-Subscribe pattern. Pusher provides WebSocket and HTTP APIs for message publishing. Like all previously mentioned services, Pusher also supports end-to-end encryption.
 
-Pusher also provides SDKs for both sending and receiving messages for several languages and frameworks including Go, Java, Node.js, Javascript, Swift, PHP, Python and others\cite{pusher-libs}. 
+Pusher provides official SDKs for both sending and receiving messages for several languages and frameworks including Go, Java, Node.js, Javascript, Swift, PHP, Python and others\cite{pusher-libs}. 
 
-There is also a range of community developed and maintained libraries including languages and frameworks such as Grails, Flash, ActionScript, Arduino, Haskell and more\cite{pusher-libs2}.
+There is also a range of community developed and maintained libraries including clients for languages and frameworks such as Grails, Flash, ActionScript, Arduino, Haskell and more\cite{pusher-libs2}.
 
-Key features:
+\subsubsection*{Key features:}
 \begin{itemize}
 \item WebSockets with fallbacks in case they are not available
 \item Client events. These include when a device becomes online or offline
@@ -103,7 +102,7 @@ Key features:
 \item Webhooks
 \end{itemize}
 
-Pricing\footnote{As of January 3 2018} (monthly):
+\subsubsection*{Pricing\footnote{As of January 3 2018} (monthly):}
 
 Pusher offers a tier-based model similar to PubNub
 
@@ -117,25 +116,25 @@ Pusher offers a tier-based model similar to PubNub
 \end{itemize}
 
 \subsection{OneSignal}
-OneSignal\footnote{OneSignal <\url{https://onesignal.com/}>} is a closed-source high volume push notification delivery service. Compared to PubNub, Ably or Pusher, OneSignal specializes in push notifications for mobile apps, though it does also support web notifications. 
+OneSignal\footnote{OneSignal <\url{https://onesignal.com/}>} is a commercial closed-source high volume push notification delivery service. Compared to PubNub, Ably or Pusher, OneSignal specializes in push notifications for mobile apps, though it does also support web notifications. This fact restricts the amount of platforms OneSignal can be used on in a significant manner.
 
 While all over-the-network communication with OneSignal and then Apple/Android servers is done over HTTPS, compared to the aforementioned services it does not support end-to-end encryption out of the box\cite{onesignal-https}. This can however be implemented on a server-client basis, ie. encrypt message before sending to OneSignal and then decrypt in app on target device. This method however couldn't be used to send notifications through OneSignal's useful dashboard.
 
 OneSignal provides SDKs for many cross-platform mobile development environments such as Unity, PhoneGap, React Native, Xamarin, and others.
 
-Key features~\protect\cite{onesignal}:
+\subsubsection*{Key features~\protect\cite{onesignal}:}
 \begin{itemize}
 \item A/B Test Messages
-\item scheduled notifications
-\item Android, iOS and WebPush support
+\item Scheduled notifications
+\item Android, iOS and WebPush notifications support
 \item Simple dashboard for managing notifications and users
 \item Default time to live for notifications when device is offline is 72 hours\cite{onesignal-ttl}
 \item Free
 \end{itemize}
 
-Pricing:
+\subsubsection*{Pricing:}
 
-Unlike PubNub, Ably or Pusher, OneSignal offers unlimited devices and notifications for free. Its monetization strategy is based on premium support.
+Unlike PubNub, Ably or Pusher, OneSignal offers unlimited devices and notifications for free. Its monetization strategy is based on providing premium support.
 
 \subsubsection*{Main feature comparison}
 
@@ -155,6 +154,8 @@ End-to-End encryption & YES & YES & YES & NO \\
 \hline
 Scheduled messages & NO & NO & NO & YES \\
 \hline
+Device online/offline events & YES & YES & YES & NO \\
+\hline
 Pricing & Tier based & Usage based & Tier based & Free \\
 \hline
 Can be self hosted & NO & NO & NO & NO \\
@@ -167,23 +168,23 @@ Open Source & NO & NO & NO & NO \\
 \label{tab:ex_db}
 \end{table}
 
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{figures/02_analysis/peak-conns}
+    \caption{Peak connections metric. Often used as a metric for pricing messaging services. Source\cite{ably-peak}}
+    \label{fig:peak-conns}
+\end{figure}
+
 \subsection{Similar solution comparison conclusion}
 All four aforementioned provide a service that allows sending a high volume of messages to many connected devices, with a similar list of additional features and different language or framework support and pricing. All have slightly different use cases and offer varying degrees of flexibility and support options.
 
 PubNub, Ably and Pusher provide different restrictions based on the price of their service. Both Ably and Pusher use a peak connections metric, that is defined by the maximum amount of concurrent connected devices (see Figure ~\ref{fig:peak-conns} ). PubNub, on the other hand, has stopped using the peak connection metric\cite{pubnub-peak} in favour of using Daily Active Devices. This metric refers to the total amount of connected devices in a 24-hour period.
 
-\begin{figure}[!ht]
-	\centering
-	\includegraphics[width=0.8\textwidth]{figures/02_analysis/peak-conns}
-    \caption{Peak connections metric. Source\cite{ably-peak}}
-    \label{fig:peak-conns}
-\end{figure}
-
 However, all of the compared solutions are closed source and provide no means of self hosting. This leads to an intrinsic dependency on the companies that develop and maintain these platforms. This can be a problem for applications using these services if, for example, the pricing was suddenly changed, or the service was shut down entirely. A perfect example of this is when GoInstant was shut down and its customers were forced to switch to a different technology, one of these being PubNub, who offered a guide for migration\cite{pubnub-goinstant}.
 
 \section{Requirement Analysis (Core System)}
 
-After careful analysis of what is expected of the system, the following requirements are put in place. These requirements are split into two categories.
+After careful analysis of what is expected of the system, the following requirements are put in place. These requirements are split into two categories, functional and non-functional requirements.
 
 \subsection{Functional Requirements}
 Functional requirements define the behaviour of the system.
@@ -197,12 +198,12 @@ Functional requirements define the behaviour of the system.
 \subsection{Non-functional Requirements}
 Non-functional requirements define the properties of the system.
 \begin{itemize}
-\item The server side of the system must be easily horizontally scalable, ie. scaling by adding new instances
-\item The server side of the system must be modular, so that the methods of receiving and sending messages can be easily replaced
+\item The server side of the system must be easily horizontally scalable, ie. scaling by adding new instances of the application
+\item The server side of the system must be modular, so that methods of receiving and sending messages can be easily replaced or added
 \item The server side of the system must be testable
 \item The server side of the system must be implemented so that it may run on the JVM\footnote{Java Virtual Machine} platform
-\item The system must include a client library for these platforms: web, Android, iOS
-\item Third party software, such as libraries, used by the system must be open source.
+\item The system must include a client library for representatives of the following platforms: web, mobile, desktop and server
+\item Third party software, such as libraries, used by the system must be open source
 \end{itemize}
 
 \section{Requirement Analysis (Sample Implementation)} \label{sec:sample-implementation-analysis}
@@ -212,28 +213,35 @@ In order to prove the system meets its requirements and works properly, a sample
 \subsection{Functional Requirements}\label{sec:s-impl-func-req}
 Functional requirements define the behaviour of the system.
 \begin{itemize}
-\item The sample implementation must be able to deliver notifications and messages onto the Android platform.
-\item The sample implementation must be able to deliver notifications and messages onto the iOS platform.
-\item The sample implementation must be able to deliver notifications and messages onto the Web platform.
-\item The sample implementation must be able to deliver notifications and messages onto the Java platform.
+\item The sample implementation must be able to deliver notifications and messages onto a mobile platform
+\item The sample implementation must be able to deliver notifications and messages onto the Web platform
+\item The sample implementation must be able to deliver notifications and messages onto the a desktop platform
+\item The sample implementation must be able to deliver notifications and messages onto the a server platform
+\item The sample implementation must contain a simple application to showcase the functionality of the system
 \end{itemize}
 
 \subsection{Non-functional Requirements}
 Non-functional requirements define the properties of the system.
 \begin{itemize}
 \item The sample implementation must include a module implementing database functionality for a relational database, eg. MySQL, PostgreSQL, MariaDB.
+\item The sample implementation must include a module implementing the message queue functionality for a chosen platform, eg. ActiveMQ, RabbitMQ.
 \end{itemize}
 
 \section{Platform Analysis}
 
-While the system will be designed in such a way that adding or removing supported platforms is simple, for the purposes of this thesis support of four of the most widely used platforms for both will be implemented.
+While the system is designed in such a way that adding or removing supported platforms is simple, for the purposes of this thesis support is to be implemented for representatives of the mobile, web, server and desktop platforms, one each.
 
-\subsection{Android}
-Android\footnote{Android <\url{https://www.android.com/}>} is a mobile operating system developed by Google\footnote{Google <\url{https://www.google.com/}>} widely used in smartphones, tablets, televisions, wearables and even automobiles. With around 80\% market share (see Figure ~\ref{fig:statista-mobile-market}) between mobile operating systems, it is indisputably one of the most important platforms on the market.
+\subsection{Mobile platform}
+Mobile devices, such as smart phones and tablets are taking over many of the functions that used to be exclusive to desktop computers. With this, it is a growing platform that cannot be overlooked by any modern application.
 
-While development is lead mostly by Google, Android is an open source project. Its wide adoption by many manufacturers for different purposes is a direct result of this. The Android platform is based on a Linux kernel and apps are run using Android Runtime (ART)\footnote{ART <\url{https://source.android.com/devices/tech/dalvik/}>} created specifically for Android and uses the Dalvik Executable (Dex) bytecode specification. 
+This section compares the two most popular mobile platforms, Android and iOS, and elaborates on the choice for the mobile platform representative implemented as part of this thesis.
 
-Development for Android can be done using the Android SDK, which allows the use of Java and Kotlin languages.
+\subsubsection{Android}
+Android\footnote{Android <\url{https://www.android.com/}>} is a mobile operating system developed by Google\footnote{Google <\url{https://www.google.com/}>} widely used in smart phones, tablets, televisions, wearables such as smart watches, and even automobiles. With around 80\% market share (see Figure ~\ref{fig:statista-mobile-market}) between mobile operating systems, it is indisputably one of the most important platforms on the market.
+
+While development is lead mostly by Google, Android is an open source project. Its wide adoption by many manufacturers for different purposes is a direct result of this. The Android platform is based on a Linux kernel and apps are run using Android Runtime (ART)\footnote{ART <\url{https://source.android.com/devices/tech/dalvik/}>} created specifically for Android and uses the Dalvik Executable (Dex) bytecode specification.
+
+Development for Android can be done using the Android SDK, which allows the use of Java and Kotlin languages. While ART and the Android SDK closely mimic the Java Runtime Environment (JRE) and Java Development Kit (JDK) respectively, it has some slight differences.
 
 \begin{figure}[!ht]
 	\centering
@@ -242,21 +250,33 @@ Development for Android can be done using the Android SDK, which allows the use 
     \label{fig:statista-mobile-market}
 \end{figure}
 
-\subsection{iOS}
-iOS\footnote{iOS <\url{https://www.apple.com/lae/ios/ios-11/}>} is a mobile operating system developed by Apple\footnote{Apple <\url{https://www.apple.com/}>} used in smartphones, tablets, wearables and some other devices. Unlike Google's Android, iOS is a completely proprietary and closed source platform and can only be found on devices directly developed and sold by Apple. It is the second most popular mobile operating system (see Figure ~\ref{fig:statista-mobile-market}).
+\subsubsection{iOS}
+iOS\footnote{iOS <\url{https://www.apple.com/lae/ios/ios-11/}>} is a mobile operating system developed by Apple\footnote{Apple <\url{https://www.apple.com/}>} used in smart phones, tablets, wearables such as smart watches, and other devices. Unlike Google's Android, iOS is a completely proprietary and closed source platform and can only be found on devices directly developed and sold by Apple. It is the second most popular mobile operating system (see Figure ~\ref{fig:statista-mobile-market}).
 
-Development for iOS can be done using Xcode, Apple’s integrated development environment (IDE). While previously iOS apps were built mostly using Objective-C, Apple has been pushing forward their Swift\footnote{Swift <\url{https://developer.apple.com/swift/}>} language as the future of iOS (and MacOS) app development.
+Development for iOS can be done using Xcode, Apple’s Integrated Development Environment (IDE). While previously iOS apps were built mostly using Objective-C, Apple has been pushing forward their Swift\footnote{Swift <\url{https://developer.apple.com/swift/}>} language as the future of iOS (and MacOS) app development.
 
-\subsection{Java}
-Java\footnote{Java <\url{https://www.java.com/}>} is a popular language owned by Oracle\footnote{Oracle <\url{https://www.oracle.com/}>} that is compiled into Java bytecode, which can be run on any Java Virtual Machine (JVM), regardless of the underlying platform that the JVM is running on. It is one of the most popular platforms for developing enterprise server applications, owing to its large community support including extensive libraries, frameworks and platform independence.
+\subsubsection*{Choice of mobile platform for implementation}
+The mobile platform chosen for the implementation is Android. Not only does Android possess the lion's share of the market, its accessibility and openness to developers is a great advantage. In order to develop an application for Andorid, the developer only needs to download the Android Studio IDE and Android SDK, which are both available for Windows, Mac, and Linux. No physical device is needed for running the application during development, as the SDK contains a powerful emulator. For developing on a physical Android device, the developer can easily turn the device into development mode in the device's settings. 
+
+Developing Android applications and distributing them through own means is completely free. However, most applications are published to Google's official marketplace, Google Play, for which Google has a one time \$25 USD registration fee\cite{google-play-fee}, after which the developer may publish any number of applications on the marketplace.
+
+Developing applications for iOS, however, is much more complicated due to Apple's closed ecosystem. iOS applications may only be developed on Mac devices\cite{apple-dev} and an iOS device is needed to run the application during development. Apple also requires all developers to be enrolled in their Apple Developer Program, which has an annual fee of \$99 USD, or \$299 USD for their Apple Developer Enterprise Program\cite{apple-dev-price}.
+
+\subsection{Desktop and Server platforms}
+\subsubsection{Java}
+Java\footnote{Java <\url{https://www.java.com/}>} is a popular language owned by Oracle\footnote{Oracle <\url{https://www.oracle.com/}>} that is compiled into Java bytecode, which can be run on any Java Virtual Machine (JVM), regardless of the underlying platform that the JVM is running on. 
+
+Although nowadays it is one of the most popular platforms for developing enterprise server applications, owing to its large community support including extensive libraries, frameworks and platform independence, it can also be used to develop traditional desktop applications, both console based and with a Graphical User Interface (GUI).
 
 \subsection{Web}
-Frontend web applications based on HTML, CSS and JavaScript\footnote{HTML <\url{https://www.w3.org/wiki/The_web_standards_model_-_HTML_CSS_and_JavaScript/}>} as more full fledged and interactive applications, compared to the static web sites of the past, have been gaining on popularity. This is partly thanks to modern browsers and faster internet bandwidths and speeds and partly due to an explosion of powerful JavaScript-based frameworks and libraries. These applications have been moving some and in cases even most of application logic from backend servers to clients in web browsers. In order for these applications to be responsive and interactive, it is paramount to have realtime reliable communication with any components that are on a remote server.
+Frontend web applications based on HTML, CSS and JavaScript\footnote{HTML <\url{https://www.w3.org/wiki/The_web_standards_model_-_HTML_CSS_and_JavaScript/}>} as more full fledged and interactive applications, compared to the static web sites of the past, have been gaining on popularity. This is partly thanks to modern browsers and faster internet bandwidths and speeds and partly due to an explosion of powerful JavaScript-based frameworks and libraries facilitating the development of extensive, interactive applications that run inside a user's web browser.
+
+A large number of applications have been moving some and in cases even most of their application logic from backend servers to clients in web browsers. In order for these applications to be responsive and interactive, it is paramount to have real-time reliable communication with any components that are on a remote server.
 
 \section{Analysis of Solutions for Implementation}
 In order for the implementation of the core system to meet all of its requirements, a careful and well-informed choice of the proper tools is paramount. This section describes the chosen tools as well as elaborates on the reasons as to why these tools were chosen.
 \subsection{Spring Boot}
-Spring Boot\footnote{Spring Boot <\url{https://projects.spring.io/spring-boot/}>} is a JVM based framework for creating stand-alone production-grade applications based on the popular Spring Framework\footnote{Spring <\url{https://spring.io/}>}. Unlike most other enterprise Java frameworks, Spring Boot does not need a container to run in, as it includes an embedded one. This allows for easy and simple JAR (Java ARchive) based deployment.
+Spring Boot\footnote{Spring Boot <\url{https://projects.spring.io/spring-boot/}>} is a JVM based framework for creating stand-alone production-grade applications based on the popular Spring Framework\footnote{Spring <\url{https://spring.io/}>}. Unlike most other enterprise Java frameworks, Spring Boot does not need a container (such as Tomcat or Glassfish) to be present on the machine to run in, as it includes an embedded one. This allows for easy and simple JAR (Java ARchive) based deployment.
 
 Spring Boot is an opinionated framework, building on the idea of \textit{Convention over Configuration}. In essence, the idea behind this is to reduce the amount of configuration needed by having sensible defaults and using rules, or conventions, in naming and structure so that the framework may assume, based on these conventions, what it is supposed to do. A typical exam of this would be that a class called \textit{WelcomeController} would map to the \textit{'/welcome*'} URL\cite{convention-over-conf}.
 
@@ -264,7 +284,7 @@ Spring Boot, being based on the Spring Framework, has powerfull Inversion of Con
 
 By delegating the creation and management of objects to the framework, IoC reduces the dependency of components on one another while still allowing them to interact and allows for more modularity, as it is the framework at runtime who decides which instances will be injected, typically by building what is called a Dependency Graph.
 
-Spring Boot projects can be managed by either of the two most popular JVM build automation and dependency management tools: Maven and Gradle.
+Spring Boot projects can be managed by either of the two most popular JVM build automation and dependency management tools, Maven and Gradle.
 \subsubsection*{Maven}
 Maven\footnote{Apache Maven <\url{https://maven.apache.org/}>} is one of the most popular JVM build automation and dependency management tools. Maven's configuration is based on XML files. It manages the project's dependencies (third-party modules and libraries) and defines the build and execution order of different tasks. Maven also downloads the project's dependencies from online repositories, which are defined in the configuration, and caches them on the local machine.
 
@@ -282,18 +302,16 @@ When it comes to performance, thanks to its advanced and modern techniques, Grad
     \label{fig:maven-gradle-speed}
 \end{figure}
 
-Thanks to the Gradle's learning curve, ease of use and advanced features, Gradle is the default build tool for Google's Android OS.
+Thanks to Gradle's learning curve, ease of use and advanced features, Gradle is the default build tool for Google's Android OS.
 
 Both Gradle and Spring Boot are distributed as Open Source software under the same license as Maven, the Apache License (ASL), Version 2.0 \footnote{Apache License 2.0 <\url{https://www.apache.org/licenses/}>}.
 
 \subsubsection*{Build Tool Conclusion}
-After careful evaluation of the available build and dependency management tools, including their features, drawbacks and things such as active community support, extensibility and thorough documentation, among others, the selected tool for the implementation part of this thesis shall be Gradle.
-
-\subsubsection*{Why not use a server-less solution?}
-Server-less solutions are inherently dependent on the platform they are ran on. This has the same large disadvantages as non-self-hosted services discussed in Section \ref{sec:similar-solutions} \nameref{sec:similar-solutions}, mainly dependence on whoever runs the platform and the possibility of great impacts to the application in case of price changes or service termination.
+After careful evaluation of the available build and dependency management tools, including their features, drawbacks and other factors, such as active community support, extensibility, and thorough documentation among others, the selected tool for the implementation part of this thesis is Gradle.
 
 \subsection{Testing Framework}
-In order to create tests for the system's code, a powerful testing framework is needed.
+In order to create automated tests for the system's code, a powerful testing framework is needed. Automated tests help to ensure that all components work as intended, even after small changes to the underlying code. Testing is indispensable for a large application to remain maintainable.
+
 \subsubsection{JUnit}
 JUnit\footnote{JUnit <\url{http://junit.org/junit5/}>} is one of the most popular JVM-based testing framework. Since the JUnit 5 version, it has been split into three main modules, The JUnit Platform, JUnit Jupiter and JUnit Vintage.
 
@@ -306,7 +324,7 @@ JUnit is Open Source software released under the Eclipse Public License (EPL) 1.
 \subsubsection{Spock Framework}
 Spock\footnote{Spock Framework <\url{http://spockframework.org/}>} is a powerful all-round testing framework for the JVM platform. Based on the Groovy\footnote{Apache Groovy <\url{http://groovy-lang.org/}>} language and JUnit, it aims to put together the plethora of test libraries available into a comprehensive and easy to use framework. 
 
-Thanks to its use of Groovy DSL, Spock boasts an easy to understand and expressive specification language. On top of basic testing, some of its more advanced features include powerful Mocking APIs, class Stubbing, Data Driven Testing and Interaction Driven Testing and its Spring Module provides seamless integration with the Spring TestContext Framework\cite{spock}.
+Thanks to its use of Groovy DSL, Spock boasts an easy to understand and expressive specification language. On top of basic testing, some of its more advanced features include powerful Mocking APIs, class Stubbing, Data Driven Testing and Interaction Driven Testing, and its Spring Module provides seamless integration with the Spring TestContext Framework\cite{spock}.
 
 Spock Framework is Open Source software distributed under the Apache License (APL) 2.0\footnote{APL 2.0 <\url{https://www.apache.org/licenses/LICENSE-2.0}>}
 
@@ -325,15 +343,15 @@ The aim of the system implemented as part of this thesis is to provide as much f
 In order to prove the system meets its requirements and works properly, a sample implementation of the highly modular parts of the system must be provided. The requirements for the sample implementation are listed in Section \ref{sec:sample-implementation-analysis} \nameref{sec:sample-implementation-analysis}.
 
 \subsection{Firebase Cloud Messaging}
-Firebase Cloud Messaging (FCM)\footnote{FCM <\url{https://firebase.google.com/docs/cloud-messaging/}>} is a multi-platform messaging solution by Google\footnote{Google <\url{https://google.com}>}. FCM is the successor to the Google Cloud Messaging (GCM)\footnote{GCM <\url{https://developers.google.com/cloud-messaging/}>} platform, that was aimed mainly at the Android, iOS and Google Chrome platforms. On top the platform support of GCM, FCM adds support for the Web, C++ and Unity platform.
+Firebase Cloud Messaging (FCM)\footnote{FCM <\url{https://firebase.google.com/docs/cloud-messaging/}>} is a multi-platform messaging solution by Google\footnote{Google <\url{https://google.com}>}. FCM is the successor to the Google Cloud Messaging (GCM)\footnote{GCM <\url{https://developers.google.com/cloud-messaging/}>} platform, that was aimed mainly at the Android, iOS, and Google Chrome platforms. On top of the platform support of GCM, FCM adds support for the Web, NodeJS, C++, and Unity platforms. 
 
-On top of a first party server library for NodeJS, FCM provides powerful HTTP and XMPP (Extensible Messaging and Presence Protocol) APIs.
+FCM also provides powerful HTTP and XMPP (Extensible Messaging and Presence Protocol) APIs, which can be used to create clients for other platforms.
 
 \subsubsection*{Key Features\cite{fcm}}
 \begin{itemize}
 \item Support for Android, iOS, Web, C++ and Unity platforms.
 \item Unlimited number of messages, with up to 4kB of data each.
-\item Support for Notification messages, which display a notification at the target device to the user.
+\item Support for Notification messages, which display a notification on the target device to the user.
 \item Support for Data messages, which are only handled in the background of the app on the target device.
 \item Normal and High priority message setting.
 \item Message Time to Live (TTL).
@@ -341,7 +359,7 @@ On top of a first party server library for NodeJS, FCM provides powerful HTTP an
 \item Free.
 \end{itemize}
 
-Firebase Cloud Messaging shall be used in the sample implementation to relay messages onto the Android, iOS and Web platforms. 
+Firebase Cloud Messaging is used in the sample implementation to relay messages onto the Android platform.
 
 In order to simplify the use of FCM from the system a proper client library should be used. While there are no first party Java libraries, there are several community-maintained ones, two of which are compared below.
 
@@ -352,7 +370,37 @@ FcmJava\footnote{FcmJava <\url{https://github.com/bytefish/FcmJava}>} is a commu
 Pushraven\footnote{Pushraven <\url{https://github.com/Raudius/Pushraven}>} is a community-maintained Java library for communicating with the FCM API. It provides a nicely designed object-oriented encapsulation of the FCM APIs, that is simple to use and very easy to read. On 1. 12. 2017, the main auther of Pushraven, Raudius, released a fully updated version of the library with support of the new FCM HTTP v1 API\cite{pushraven-new-api}.
 
 \subsubsection*{FCM library conclusion}
-Due to its good design, ease of use, fast update intervals and support of the more modern FCM HTTP v1 APIs, the library used in the sample implementation will be Pushraven.
+Due to its good design, ease of use, fast update intervals and support of the more modern FCM HTTP v1 APIs, the library used in the sample implementation was decided to be Pushraven.
+
+\subsection{Message Queue}
+The design of the architecture of the system features a message queue for passing messages between the individual instances of the application (see Chapter \ref{design:design} \nameref{design:design}). This section presents several of the most popular message queue brokers, discusses their differences and presents a choice for the sample implementation.
+
+\subsubsection{RabbitMQ}
+RabbitMQ \footnote{RabbitMQ <\url{https://www.rabbitmq.com/}>} is an Open Source message queue broker, licensed under the Mozzila Public License (MPL)\footnote{MPL <\url{https://www.mozilla.org/en-US/MPL/}>}. RabbitMQ supports deployment in a distributed cluster, allowing for easy scaling, can be deployed on a wide variety of systems including Windows and Linux, and provides client libraries for languages such as Java, .NET, PHP, Python, Javascript, Ruby, Go and others\cite{rabbitmq-devtools}, as well as integration with frameworks such as Spring.
+
+While RabbitMQ is not a JMS provider, it includes a plugin that enables support for the JMS queue and topic messaging models\cite{rabbitmq-jms}.
+
+\subsubsection*{Key features:}
+\begin{itemize}
+\item Support for both message queues and publish/subscribe pattern topics
+\item Delivery acknowledgement
+\item Routing based on wildcards
+\end{itemize}
+
+\subsubsection{Apache ActiveMQ}
+Apache ActiveMQ \footnote{Apache ActiveMQ <\url{http://activemq.apache.org/}>} is an Open Source message queue broker, licensed under the Apache 2.0 License (APLv2)\footnote{APLv2 <\url{http://www.apache.org/licenses/LICENSE-2.0.html}>}. ActiveMQ provides a plethora of clients and protocols for languages such as Java, C++, C\#, Ruby, Perl, Python, PHP, and others\cite{activemq-devtools}, as well as several different communication protocols, such as AMQP, MQTT, OpenWire and STOMP\cite{activemq-devtools}. ActiveMQ also has support for frameworks such as Spring and unlike RabbitMQ is a JMS provider.
+
+ActiveMQ also provides message queue data persistence and scaling via distribution and clustering.
+
+\subsubsection*{Key features:}
+\begin{itemize}
+\item Support for both message queues and publish/subscribe pattern topics
+\item Delivery acknowledgement
+\item Routing based on wildcards
+\end{itemize}
+
+\subsubsection*{Message Queue broker conclusion}
+RabbitMQ and Apache ActiveMQ provide extremely similar functionality and therefore are equivalent solutions for the implemention. However, based on the fact that ActiveMQ itself is based on the JVM and is a native JMS provider, as well as prior personal experience with the platform, the message queue broker used in the implementation is Apache ActiveMQ.
 
 \section{Scalability Analysis}
 In order to achieve a system that is horizontally scalable, the system must be able to easily run distributed among different machines, let us call every such instance of the back-end application a \textit{node}. The system must be able to run across multiple nodes, distributing the computational load among these and it must be easy to add or remove nodes from the system while it maintains full functionality. This section describes the requirements on such a system and various problematic scenarios that may occur and the system must be able to handle.
@@ -368,7 +416,7 @@ This scenario is expected to appear very often, as a large amount of clients are
 \subsubsection{A large amount of clients connects at the same time}
 This scenario may occur when a large amount of clients attempts to connect to the system simultaneously. The difference between this scenario and the scenario described in Section \ref{analysis-scale-large-no} \nameref{analysis-scale-large-no} is that a large number of clients must not only be serviced at the same time, but they are also initializing their connection to the system simultaneously, placing great strain onto the entry point of the system.
 
-This scenario is expected to occur very rarely on a very large scale and in minor scales during peak times, for example if an application utilizing the system would connect when the person using it begins using their phone a peak of connections can be expected in the morning, when people wake up and start their day.
+This scenario is expected to occur very rarely on a very large scale and in minor scales during peak times, for example if an application utilizing the system would connect when the user starts using their phone a peak of connections can be expected in the morning, when people wake up and start their day.
 
 \subsubsection{A large amount of messages for a single client}
 This case describes a scenario where a large number of clients are all sending messages to a single addressee client. The possible problem is that a client is connected to a single node, therefore the messages that are to be delivered to it cannot be scaled across multiple nodes.
@@ -379,3 +427,8 @@ This scenario may happen in cases where the system is used to link a server to i
 This scenario describes a situation where one of the nodes dies or is disconnected. The system must be able to respond to such a situation by reconnecting any clients that were connected to this node to a different node or set of nodes and manage to reroute any messages that are addressed to these clients.
 
 This scenario is expected to happen rarely, with a cause either due to technical issues or for example upgrading the application on a node to a new version.
+
+\subsubsection{A message is sent to a user group with a large amount of users}
+This scenario describes a situation where the system contains a group with many users, for example an application's group of all its users, and a message is sent to this group. In the aforementioned example that could be used as a broadcast message to all the app's users. This scenario is problematic as the number of users in the group may be large enough that unfolding the group into all its users may put extreme stress on a node and its memory, possibly causing it to crash.
+
+This scenario is expected to occur depending on the application using the system.

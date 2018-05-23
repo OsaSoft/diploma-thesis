@@ -4,4 +4,6 @@ interface IBaseRepository<E> {
     E save(E entity)
 
     Optional<E> findById(String id)
+
+    List<E> findAllById(List<String> ids)
 }

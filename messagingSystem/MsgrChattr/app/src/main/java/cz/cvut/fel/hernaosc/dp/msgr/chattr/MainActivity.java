@@ -99,7 +99,7 @@ public class MainActivity extends Activity {
         String firebaseToken = FirebaseInstanceId.getInstance().getToken();
         Logger.i("Got FCM token: " + firebaseToken);
 
-        msgrClient.setUrl("http://192.168.1.2:8080");
+        msgrClient.setUrl("192.168.1.2:8080");
         msgrClient.setPlatformName("FCM");
         msgrClient.setDeviceToken(firebaseToken);
         msgrClient.setUserName("oscar");

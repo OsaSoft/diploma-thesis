@@ -53,7 +53,7 @@ class FirebaseCloudMessagingAdapter implements IPlatformAdapter {
         }
 
         try {
-            Pushraven.accountFile = new ClassPathResource(serviceAccountFilename).file
+            Pushraven.accountFile = new File(serviceAccountFilename)
             Pushraven.projectId = projectId
         } catch (IOException ex) {
             throw new BeanInitializationException("Could not find FCM service account file called '$serviceAccountFilename'", ex)

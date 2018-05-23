@@ -4,8 +4,6 @@ import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IDevice
 import cz.cvut.fel.hernaosc.dp.msgr.core.db.entities.IUser
 
 interface IDeviceRepository extends IBaseRepository<IDevice> {
-    List<IDevice> findAllById(List<String> ids)
-
     List<IDevice> findAllByIdAndPlatformName(List<String> ids, String platformName)
 
     List<IDevice> findAllByUser(IUser user)
@@ -13,8 +11,6 @@ interface IDeviceRepository extends IBaseRepository<IDevice> {
     List<IDevice> findAllByUserId(String userId)
 
     IDevice findByToken(String token)
-
-    List<IDevice> findAllByUserIdAndPlatformName(String userId, String platformName)
 
     List<IDevice> findAllByUserIdInAndPlatformName(List<String> userIds, String platformName)
 }

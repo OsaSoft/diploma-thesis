@@ -9,12 +9,16 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class ConnectionPoolConfig {
 
+    @Value('${spring.activemq.broker-url:#{null}}')
+    private String brokerUrl = null
+
     @Value('${msgr.activemq.max.connections:#{1}}')
     private int maxConnections = 1
 
     @Bean(name = "pooledConnectionFactory")
     PooledConnectionFactory pooledConnectionFactory() {
-        def pooledFactory = new PooledConnectionFactory(new ActiveMQConnectionFactory())
+        ActiveMQConnectionFactory activeMQConnectionFactory = brokerUrl ? new ActiveMQConnectionFactory(brokerUrl) : new ActiveMQConnectionFactory()
+        def pooledFactory = new PooledConnectionFactory(activeMQConnectionFactory)
         pooledFactory.maxConnections = maxConnections
         pooledFactory
     }
