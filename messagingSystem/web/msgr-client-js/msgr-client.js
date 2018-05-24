@@ -123,10 +123,10 @@ class MsgrClient {
                 }
                 break;
             case WS_BAD_MESSAGE:
-                //TODO
+                console.log("Message was sent in bad format");
                 break;
             case WS_ERROR_SEND:
-                //TODO
+                console.log("An error occured while sending the message");
                 break;
             default:
                 console.log("Unknown ws message type " + data.code);

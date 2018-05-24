@@ -166,6 +166,9 @@
     MSGR.onFailure = () => {
         appendToMessages("Server", "Error occured");
         document.getElementById("connected").textContent = "Status: Disconnected";
+
+        console.log("Got disconnected, attempting to reconnect...");
+        connect();
     };
 
     MSGR.onNotification = (title, body) => {

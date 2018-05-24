@@ -1,6 +1,5 @@
 package cz.cvut.fel.hernaosc.dp.msgr.javaclient.ws;
 
-import org.eclipse.jetty.websocket.api.CloseStatus;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;

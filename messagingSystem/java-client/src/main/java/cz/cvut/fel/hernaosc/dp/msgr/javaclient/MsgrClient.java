@@ -92,7 +92,8 @@ public class MsgrClient {
 		try {
 			if (websocket) {
 				if (!connected) {
-					throw new IOException("Not connected to websocket!");
+					log.log(Level.WARNING, "Not connected to websocket! Attempting to connect...");
+					init();
 				}
 
 				sendWebsocket(message);
@@ -144,23 +145,27 @@ public class MsgrClient {
 	}
 
 	private void connectWs() throws IOException {
-		String fullUrl = "ws://" + getRandomAddress() + "/ws/" + getDeviceId();
-		webSocketClient = new WebSocketClient();
-		wsSocket = new WsSocket(wsMessageListener, (closeCode) -> connected = false);
+		//TODO: max number of attempts? Wait increasing times between attempts?
+		while (!connected) {
+			String fullUrl = "ws://" + getRandomAddress() + "/ws/" + getDeviceId();
 
-		try {
-			webSocketClient.start();
-			URI endpoint = new URI(fullUrl);
-			ClientUpgradeRequest upgradeRequest = new ClientUpgradeRequest();
-			Future<Session> connectionFuture = webSocketClient.connect(wsSocket, endpoint, upgradeRequest);
-			//block until we are connected
-			connectionFuture.get(10, TimeUnit.SECONDS);
+			webSocketClient = new WebSocketClient();
+			wsSocket = new WsSocket(wsMessageListener, (closeCode) -> connected = false);
 
-			connected = true;
-		} catch (Exception ex) {
-			throw new IOException("Failed to connect to websocket. Reason: " + ex.getMessage(), ex);
+			try {
+				webSocketClient.start();
+				URI endpoint = new URI(fullUrl);
+				ClientUpgradeRequest upgradeRequest = new ClientUpgradeRequest();
+				Future<Session> connectionFuture = webSocketClient.connect(wsSocket, endpoint, upgradeRequest);
+				//block until we are connected
+				connectionFuture.get(10, TimeUnit.SECONDS);
+
+				connected = true;
+			} catch (Exception ex) {
+				log.log(Level.SEVERE, "Failed to connect to websocket. Reason: " + ex.getMessage(), ex);
+				log.log(Level.SEVERE, "Retrying...");
+			}
 		}
-
 	}
 
 	private Map<String, Object> doRequest(String method, String fullUrl, Object objToSend) throws IOException {
