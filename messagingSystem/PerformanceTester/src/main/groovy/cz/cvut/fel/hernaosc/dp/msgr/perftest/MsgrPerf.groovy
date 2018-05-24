@@ -45,7 +45,7 @@ class MsgrPerf {
                 new CommunicationTest(args[1..4] as String[]).run()
                 break
             case 4:
-                println "Usage: ${args[0]} ${man[args[0]]}"
+                println "Usage: ${args[1]} ${man[args[1]]}"
                 System.exit(1)
                 break
         }
