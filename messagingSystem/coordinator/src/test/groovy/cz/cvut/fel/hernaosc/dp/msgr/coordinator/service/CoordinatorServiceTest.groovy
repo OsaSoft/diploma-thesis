@@ -1,6 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.coordinator.service
 
 import cz.cvut.fel.hernaosc.dp.msgr.coordinator.common.MsgrNode
+import cz.cvut.fel.hernaosc.dp.msgr.coordinator.dto.NodeStatus
 import groovy.time.TimeCategory
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpStatus
@@ -117,14 +118,17 @@ class CoordinatorServiceTest extends Specification {
         when:
             coordinatorService.doHealthCheck()
         then:
-            numNodes * new RESTClient("http://test", _) >> restClientMock
+            numNodes * new RESTClient("http://test") >> restClientMock
         and:
             numNodes * restClientMock.get(_) >> [
                     status: HttpStatus.SC_OK,
-                    data  : [load: 0.5]
+                    data  : [load: 0.5, memory: 57]
             ]
         and:
-            nodes.every { coordinatorService.nodes[it].load == 0.5 }
+            nodes.every {
+                def nodeStatus = coordinatorService.nodes[it]
+                nodeStatus.load == 0.5 && nodeStatus.memory == 57
+            }
 
         where:
             numNodes << [10, 5, 1]
@@ -139,7 +143,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -150,16 +154,17 @@ class CoordinatorServiceTest extends Specification {
         when: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "node is responding again"
             1 * restClientMock.get(_) >> [
                     status: HttpStatus.SC_OK,
-                    data  : [load: 0.5]
+                    data  : [load: 0.5, memory: 57]
             ]
         and: "node is responsive again and updated"
             def status = coordinatorService.nodes[node]
             status.responding
             status.load == 0.5
+            status.memory == 57
     }
 
     def "Handles node failing two consecutive health checks within timeout"() {
@@ -171,7 +176,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -182,7 +187,7 @@ class CoordinatorServiceTest extends Specification {
         when: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -203,7 +208,7 @@ class CoordinatorServiceTest extends Specification {
         when: "health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
@@ -218,7 +223,7 @@ class CoordinatorServiceTest extends Specification {
         and: "another health check is performed"
             coordinatorService.doHealthCheck()
         then:
-            1 * new RESTClient("http://test", _) >> restClientMock
+            1 * new RESTClient("http://test") >> restClientMock
         and: "health check on node fails"
             1 * restClientMock.get(_) >> {
                 throw new ConnectTimeoutException()
