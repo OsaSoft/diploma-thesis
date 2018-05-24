@@ -37,6 +37,8 @@
 \usepackage{float}
 \usepackage{nameref}
 
+\usepackage{tabularx}
+
 \usepackage{misc/k336_thesis_macros} % specialni makra pro formatovani DP a BP
  % muzete si vytvorit i sva vlastni v souboru k336_thesis_macros.sty
  % najdete  radu jednoduchych definic, ktere zde ani nejsou pouzity
@@ -217,13 +219,6 @@ Cílem aplikace je sloužit jako základ pro využití v moderních aplikacích.
 
 %*****************************************************************************
 
-\lstset{
-    string=[s]{"}{"},
-    stringstyle=\color{blue},
-    comment=[l]{:},
-    commentstyle=\color{black},
-    }
-
 \include{chapters/01_introduction}
 
 \include{chapters/02_analysis}
@@ -232,9 +227,9 @@ Cílem aplikace je sloužit jako základ pro využití v moderních aplikacích.
 
 \include{chapters/04_implementation}
 
-% \include{chapters/05_testing}
+\include{chapters/05_testing}
 
-% \include{chapters/06_conclusion}
+\include{chapters/06_conclusion}
 
 %*****************************************************************************
 
@@ -250,7 +245,7 @@ Cílem aplikace je sloužit jako základ pro využití v moderních aplikacích.
 \appendix
 
 \include{chapters/AX_abbrev}
-% \include{chapters/AX_cd}
+\include{chapters/AX_cd}
 
 %*****************************************************************************
 

@@ -90,7 +90,7 @@ class WebSocketService extends TextWebSocketHandler implements IPlatformAdapter 
         log.debug "Websocket connection established. Session id: '$session.id'. Device id: '$deviceId'"
 
         sendWsMessage(session, [status: "CONNECTED", code: StatusCodes.WS_CONNECTED])
-        mqReceiver.subscribe(["$platformQueueName.$deviceId"], onMessageForDevice)
+        mqReceiver.subscribe(["$platformQueueName.$deviceId"], true, onMessageForDevice)
     }
 
     @Override

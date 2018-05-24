@@ -41,7 +41,7 @@ class UserProcessor {
                 if (device.platform.stateless) {
                     mqSender.send([device.platform.name], messageText, true)
                 } else {
-                    mqSender.send(["${device.platform.name}.$device.id"], messageText)
+                    mqSender.send(["${device.platform.name}.$device.id"], messageText, true)
                 }
             }
         }

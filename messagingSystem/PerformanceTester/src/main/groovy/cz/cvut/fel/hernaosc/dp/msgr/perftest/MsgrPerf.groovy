@@ -1,7 +1,7 @@
 package cz.cvut.fel.hernaosc.dp.msgr.perftest
 
+import cz.cvut.fel.hernaosc.dp.msgr.perftest.test.CommunicationTest
 import cz.cvut.fel.hernaosc.dp.msgr.perftest.test.ConnectionTest
-import cz.cvut.fel.hernaosc.dp.msgr.perftest.test.LagTest
 import cz.cvut.fel.hernaosc.dp.msgr.perftest.test.MultiNodeMultiMessageTest
 import cz.cvut.fel.hernaosc.dp.msgr.perftest.test.SingeNodeMultiMessageTest
 
@@ -10,7 +10,7 @@ class MsgrPerf {
             "testConnection",
             "multiMessage",
             "multiNodeMessage",
-            "perf",
+            "communication",
             "help"
     ]
 
@@ -18,7 +18,7 @@ class MsgrPerf {
             "testConnection"  : "<url> <target> \n Valid targets: 'device', 'user'",
             "multiMessage"    : "<url> <target> <numMessages> \n Valid targets: 'device', 'user'",
             "multiNodeMessage": "<numMessages> <list of node urls>",
-            "perf"            : "",
+            "communication"   : "<url1> <url2> <numMessages> <delay between messages>",
             "help"            : "<cmd>"
     ]
 
@@ -42,7 +42,7 @@ class MsgrPerf {
                 new MultiNodeMultiMessageTest(args.drop(1)).run()
                 break
             case 3:
-                new LagTest(args[1]).run()
+                new CommunicationTest(args[1..4] as String[]).run()
                 break
             case 4:
                 println "Usage: ${args[0]} ${man[args[0]]}"

@@ -1,294 +1,315 @@
 \chapter{Testing}
 
-The whole system has many components and it is a widely accepted fact that the more complex the system is, the more prone to errors and bugs it is. In this chapter I will describe the benchmarking tests I performed on the most complex part - the tracking engine - and the user tests I performed not only on the front-end applications but also on the whole workflow of the system as well.
+Testing is an inseparable component of software development and is an integral part of the code writing process. In order to ensure the designed and implemented system works correctly and satisfies the requirements placed upon it, three different approaches to testing and verification were chosen: automated tests, manual tests and performance tests. This chapter describes the performed tests, the environments in which they were performed, and their outcomes along with derived conclusions.
 
-\section{Benchmark Tests}
+\section{Automated Testing}
+Automated tests for the application are written using the Spock framework, described in Chapter \ref{analysis:spock} \nameref{analysis:spock}. The Spock framework has a powerful mocking API, which is used in order to test application logic in isolation in the form of unit tests. Spock also provides support for easily implemented Data Driven and Interaction Based testing, both of which were used.
 
-To verify that the Tracking Engine handles an extensive load it is important to simulate a real-world peak that could occur during everyday usage. I identified the biggest bottlenecks to be the client side (networking issues like poor EDGE connection) and the workers' parsing job (how big a task can they manage?). The Gateway server has an automatic load-balancer, so there shouldn't be a problem, just like with all other automatically scaled components by Amazon (S3 and SQS).
+Where needed, automated Spock's Spring plugin is used in order to run integration tests, which are used for verification of logic that relies on the Spring Application Context to be loaded. For integration tests, an embedded H2\footnote{H2 Database Engine <\url{http://www.h2database.com/html/main.html}>} database is used, allowing for tests to easily be run automatically by continuous integration tools, without the need of supplying an external test database.
 
-\subsection{Workers}
+\section{Manual Testing}
+Due to the nature of the system and the complexity of testing a distributed system, the sample implementation application, Chattr, was created to verify the proper behaviour of the system. Using this, a large part of the tests of the functionality of the system as a whole was done using manual tests, based on use-case scenarios. This section describes the test scenarios and the environment in which they were performed.
 
-To verify how big a load a single worker can handle, I created data on the front-end of various sizes and sent it to the server. I turned on a logging system, CloudWatch, that told me the precise times when a job started on a worker and when it finished.
-
-\begin{table}[!ht]
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Number of entries} & \textbf{Execution Start} & \textbf{Execution End} & \textbf{Duration} \\
-\hline
-100 & 15:46:35.966 & 15:46:41.595 & $5.629s$ \\
-\hline
-500 & 16:06:57.851 & 16:07:15.265 & $17.414s$ \\
-\hline
-1000 & 15:51:23.311 & 15:51:59.060 & $35.749s$ \\
-\hline
-5000 & N/A & N/A & N/A \\
-\hline
-10000 & N/A & N/A & N/A \\
-\hline
-\end{tabular}
-\end{center}
-\caption{Worker Processing Times}
-\label{tab:table_worker}
-\end{table}
-
-\newpage
-
-To give it a visual perspective:
+\subsection{Testing Environment} \label{test:test-env}
+In order to approximate a distributed environment, the testing environment consists of two machines, on which the system is run, utilizing each machine to run multiple applications and Nodes. The deployment diagram of the system testing environment can be seen in Figure \ref{fig:test-deploy-dia}.
 
 \begin{figure}[!ht]
-\begin{center}
-\begin{tikzpicture}
-    \begin{axis}[
-    		height=7cm,
-		width=0.85\textwidth,
-		xlabel={Number of entries},
-    		ylabel={Time to process (s)}
-    	]
-    \addplot coordinates { 
-    		(100, 5.629) 
-    		(500, 17.414) 
-    		(1000, 35.749)};
-    \end{axis}
-\end{tikzpicture}
-\end{center}
-\caption{Worker Processing Times Graph}
+	\centering
+	\includegraphics[width=1\textwidth]{figures/05_testing/test-deploy-dia}
+    \caption{Deployment diagram of the testing environment}
+    \label{fig:test-deploy-dia}
 \end{figure}
 
-The graph itself doesn't show anything that would be out of the ordinary, so why did the workers fail to process 5000 and 10000 entries? The scenario of what actually happened is interesting in both cases and it isn't the fault of the workers themselves:
+The machine called \textit{Server2} runs four Node instances, an ActiveMQ instance and two instances of the Web client, Chattr. The second machine, called \textit{Server1}, runs a Node instance, the Node Coordinator, and a MySQL database. Both machines share the same Local Area Network (LAN), with an Android smart phone also connected to the same network. The LAN is connected to the internet, where the Firebase Cloud Messaging service resides in the cloud.
 
-\begin{enumerate}
-	\item {\bf 5000 entries: } When the first worker got the message to handle 5000 entries sitting on S3, he reached out for them and started parsing. However he did not make it in the given time of message execution and therefore the message was marked as failed. When the SQS tried to deliver it again, the worker was still processing the data and so it was sent to another worker, who started parsing them. Then finally the first worker returned "200 OK" which resulted in an inconsistent state and the whole system went into "Warning". CloudWatch stopped the servers and I couldn't get the execution times. The result was that, unfortunately, the data in the database was saved twice.
-	\item {\bf 10000 entries: } In the last round, it simply took too long and the whole worker crashed and so did the second one soon after the first one.
-\end{enumerate}
-
-\subsubsection*{Conclusion}
-
-Even though compression does save some data on the client side, it also introduces a new complexity on the server side that is very hard to parallelize, so it is important to find a "good enough" amount of entries to be uploaded in a single batch report.
-
-\newpage
-
-\subsection{Client-side Compression Rate}
-
-To continue the search for optimum load on both sides, I measured the performance of the GZIP compression library. I performed it on a real device (iPhone 6S), using logging capabilities in Xcode. 
+\subsubsection{Testing Environment Machine Specifications}
+The hardware and operating system specifications of the two machines used in the testing environment are detailed in Table \ref{tab:test-hw}.
 
 \begin{table}[!ht]
 \begin{center}
-\begin{tabular}{|c|c|c|c|}
+\begin{tabularx}{\textwidth}{l|X|X|l}
 \hline
-\textbf{Number of entries} & \textbf{Before compression} & \textbf{After compression} & \textbf{Compression rate} \\
+\textbf{Machine} & \textbf{Operating System} & \textbf{CPU} & \textbf{RAM} \\
 \hline
-100 & 51.41kB & 0.67kB & 76.7x \\
+Server1 & Ubuntu Server 16.04 LTS x64 & Intel Core i5-7500T, 4 cores @ 2.7GHz & 8GB DDR3L 1600MHz \\
 \hline
-500 & 252.98kB & 1.65kB & 153.3x \\
+Server2 & Windows 10 Home x64 & Intel Core i7-3610QM, 4 cores @ 2.3GHz & 16GB DDR3 1600MHz \\
 \hline
-1000 & 504.92kB & 2.87kB & 177.8x \\
-\hline
-5000 & 2520.55kB & 12.65kB & 199.3x \\
-\hline
-10000 & 5040.08kB & 24.89kB & 202.5x \\
-\hline
-\end{tabular}
+\end{tabularx}
 \end{center}
-\caption{Client-side Compression Rate}
-\label{tab:compression}
+\caption{Testing environment machine specifications}
+\label{tab:test-hw}
 \end{table}
 
-To give it a visual perspective:
+\section{Performance Testing}
+As the system is meant to support large-scale real-time applications, performance is critical. For the purposes of gauging the system's message throughput in different scenarios, a performance benchmark application was created. The \textit{PerformanceTester} application is a console application written in Groovy, which uses the \textit{Java-Client} library to communicate with the system.
+
+This Section describes the performance tests performed, presents the obtained experimental data and uses it to formulate conclusions on the system's performance.
+
+\subsection{Tests}
+All tests were performed in the testing environment described in Section \ref{test:test-env} \nameref{test:test-env}, with messages being addressed to a user. This means the message goes through the following flow:
+
+The message is sent to a Node, where it gets processed and pushed into the user message queue, from which another Node dequeues it, processes it, and as it is a message addressed for a user, unfolds the user into their devices, pushing the message into the devices respective message queues. After this, the Nodes that each of these devices is bound to dequeues the message and passes it to its client.
+
+Every test was repeated four times in order to average out any abnormalities caused by other processes on the machines.
+
+The precision of the time measurements is in milliseconds (ms).
+
+\subsection{Test 1: Single Node, single client. 50 messages}
+In this test, the system consist only of \textit{Node001}, running on the same machine as the PerformanceTester application. 
+
+The PerformanceTester connects a single client to the Node and sends 50 messages addressed to itself. As all of the messages are sent almost simultaneously, with no delay between them, this test floods the system with a large number of messages at the same time.
+
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 0.3\\
+\hline
+2 & 0.42\\
+\hline
+3 & 0.48\\
+\hline
+4 & 0.18\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 1}
+\label{tab:test-perf1}
+\end{table}
 
 \begin{figure}[!ht]
-\begin{center}
-\begin{tikzpicture}
-    \begin{axis}[
-    		height=7cm,
-		width=0.85\textwidth,
-		xlabel={Number of entries},
-    		ylabel={Compression rate}
-    	]
-    \addplot coordinates { 
-    		(100, 76.7) 
-    		(500, 153.3) 
-    		(1000, 177.8) 
-    		(5000, 199.3) 
-    		(10000, 202.5)};
-    \end{axis}
-\end{tikzpicture}
-\end{center}
-\caption{Compression Rate Graph}
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf1}
+    \caption{Test 1: Delivery times}
+    \label{fig:test-perf1}
 \end{figure}
 
-I was quite surprised by the performance, even though I expected it to be performing very well, given the fact that the JSON file structure is very repetitive. What I was equally suprised by was the logarithmic shape of the curve. In other words, I did not expect the compression rate to slow down.
-
-\subsubsection*{Conclusion}
-
-The best amount seems to be somewhere in the range 400 - 700 entries. Combined with the knowledge from the previous measurement (worker processing time) I would aim to be in lower numbers, perhaps 400 - 600. That ensures a very good compression rate (\textasciitilde 150x) and also good processing time on the backend (\textasciitilde 18s)
-
-\newpage
-
-\section{User Tests}
-
-I performed user tests in three different ways:
-
-\begin{enumerate}
-	\item Personal interviews
-	\item Scenario test
-	\item Panel discussion
-\end{enumerate}
-
-Each tested different aspects of the whole solution and each brought me some new insights into which problems I had overlooked during the development.
-
-\subsection{Personal Interviews}
-
-The personal interviews were held with three different people, each from a different department. I showed them the whole workflow and asked them to give me feedback on anything they wanted.
-
-\subsubsection{Test Setup}
-
-The interviews were held in a company kitchen - an area where people relax, chat and hang out during their personal breaks. The work was presented on a laptop (JIRA workflow and the deployment in the AWS console, should it be of any interest) and an iPhone 6S. Both devices were directly accessible to the person being interviewed.
-
-I extracted the highlights from each interview:
-
-\begin{enumerate}
-		\item Associate Director, Applied Technology
-		\begin{itemize}
-				\item[] "I like the fact that I define the domain vocabulary once. Once and that's it. That's great."
-				\item[] "Could we wire-up the installation IDs to the user IDs to ensure that 10 installations on the same device are counted as one?"
-				\item[] (Looking at the Timeseries Application) "Yes! That's exactly what I want to see."
-		\end{itemize}			
-		
-		\item Mobile Application Development Lead
-		\begin{itemize}
-				\item[] "I didn't quite understand the concept of WATCH when you first said it, maybe name it differently, like "Event" for example?"
-				\item[] "Is it possible to produce a user flow? Like how the user moves throughout the application?"
-				\item[] "How do you address a change in the configuration file? Is there a way to ensure I am not reporting something I was reporting before?"
-				\item[] "How do you ensure that the content is sent later if it fails? Are you using operations.io or some other framework?"
-		\end{itemize}
-		
-		\item UX Lead
-		\begin{itemize}
-				\item[] "Could you show me how I, as a UX designer, would use this? Would I use it only at the start or towards the end as well?"
-				\item[] "Can I edit measurable items?"
-				\item[] "So here, I would add "WATCH: Button Start in the header" and the programmer would receive it in his configuration file, right?" (a task a programmer would refer to as "Back button in a UINavigationBar")
-		\end{itemize}
-\end{enumerate}
-
-The interviews were so fruitful; they validated the main idea as all three were very interested in the project and were asking how soon we could deploy it to test it. 
-
-At the same time, they uncovered the questions I didn't ask myself, such as the configuration file versioning and change management.
-
-And lastly, they brought up ideas for future development.
-
-\subsection{Scenario Test}
-
-The scenario test was performed on the administrative application, made for creating configuration files for developers to implement. The five people \cite{Nielsen:1993:MMF:169059.169166} I asked to test the application were from different departments and also different positions (technical support, assistant, programmer, etc.)
-
-\subsubsection{Test Setup}
-
-The test was performed on an iPhone 6S device, running the real application, connected to real data. Issues in JIRA were created by me, ready to be used during the test (there was no need for the testers to create those issues, because that is JIRA workflow, not the workflow of the application).
-
-The test was carried out in a semi-informal environment - in the company library on a comfortable sofa, surrounded by bookshelves. I sat in front of the tester, not peeking over his/her shoulder. 
-
-I asked each tester to narrate every step he/she made and point out any inconvenience, should one ever occur. I assured everybody that criticism was welcome and that there was absolutely no problem if they failed to perform the task. That was what the test was about and it was vital for the tester to be aware of that.
-
-\newpage
-
-\subsubsection{Scenario}
-
-The scenario was made up of the following steps:
-
-\begin{enumerate}
-	\item Start creating a new configuration.
-	\item The configuration should be made for the project "Semantic Analysis of User Interactions".
-	\item Select to measure the performance of the measurement switch.
-	\item Are there any special values to be tested?
-	\item Generate and upload the configuration file to Dropbox.
-	\item Can you tell me precisely what was in the configuration file again?
-\end{enumerate}
-
-The designed path to achieve these was:
-
-\begin{enumerate}
-	\item Click on the plus button in the top right-hand corner in the navigation bar.
-	\item Scroll to letter "S" and select the project "Semantic Analysis of User Interactions".
-	\item Click on the issue "Performance measurement switch".
-	\item The correct answer is yes - it is written in the comment below the name of the issue. There are two watched values.
-	\item Click done and then click on the button "Upload to Dropbox". After clicking done after a successful upload, the application is automatically brought back to the first screen.
-	\item Click on the button in the bottom right-hand corner "View Generated Configurations". Select the one with the most recent time by clicking on it and it leads directly to a list with all the issues in the configuration.
-\end{enumerate}
-
-\newpage
-
-How the testers performed:
+\subsection{Test 2: Single Node, single client. 200 messages}
+The scenario for this test is the same as for Test 1, except this time 200 messages are sent simultaneously.
 
 \begin{table}[!ht]
 \begin{center}
-\begin{tabular}{|c|c|c|c|c|c|}
+\begin{tabularx}{0.7\textwidth}{l|l}
 \hline
-\textbf{Step} & \textbf{Person 1} & \textbf{Person 2} & \textbf{Person 3} & \textbf{Person 4} & \textbf{Person 5} \\
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
 \hline
-\textbf{1.} & OK & OK & "I guess & OK & Tracked  \\
-& & & this plus?" & & Applications \\
+1 & 1.205\\
 \hline
-\textbf{2.} & OK & OK & OK & OK & OK \\
+2 & 1.125\\
 \hline
-\textbf{3.} & "How is  & OK & OK & "Is it & "Is there \\
-& this sorted?" & & & this?" & a search field?" \\
+3 & 1.105\\
 \hline
-\textbf{4.} & OK & OK & OK & OK & Clicked \\
-& & & & & too fast \\
+4 & 1.32\\
 \hline
-\textbf{5.} & OK & OK & OK & OK & OK \\
-\hline
-\textbf{6.} & "In Dropbox or & OK & OK & "Oh that & OK \\
-& in the app?" & & & is a button!" & \\
-\hline
-\end{tabular}
+\end{tabularx}
 \end{center}
-\caption{User Test Results}
-\label{tab:scenario}
+\caption{Average message delivery time for Test 2}
+\label{tab:test-perf2}
 \end{table}
 
-The user tests gave me some new insights into the workflow of the application and my perception of the user interface. I thought it was crystal clear, but apparently some people don't see certain things the same way and that is OK. It's important to reflect that in the user interface, so it tells a story or is self explanatory.
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf2}
+    \caption{Test 2: Delivery times}
+    \label{fig:test-perf2}
+\end{figure}
 
-\subsubsection*{Conclusion}
+\clearpage
 
-There should definitely be a search bar in the list of issues, and the sorting algorithm should be revisited too. It seems like it is sorted by the ID of the issue in JIRA. That can become really messy with a large amount of issues in a project. Also the button leading to previously generated configurations should be highlighted a little better to evoke the button-y feeling.
+The data from Tests 1 and 2 shows a clear connection between the number of messages sent simultaneously and their delivery time. This is most likely due to the congestion of the websocket communication channel, as all messages are pushed into it at once with little to no spacing between them.
 
-\subsection{Panel Discussion}
+\subsection{Test 3: 4 Nodes, single machine. 50 messages}
+The scenario for this test is similar to the scenarios in Tests 1 and 2, except now the \textit{Server2} machine is running four Nodes and the PerformanceTester is running a client for each. For every message to be sent, a random client is chosen and the message is sent as a broadcast to all the clients, including the sender. This effectively means that while 50 messages are sent out, 200 messages in total are received - 50 for each client.
 
-I expected this test to be the most cruel one. I invited programmers with varying levels of experience and a wide range of specializations:
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 2.97\\
+\hline
+2 & 2.92\\
+\hline
+3 & 1.975\\
+\hline
+4 & 2.785\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 3}
+\label{tab:test-perf3}
+\end{table}
 
-\begin{enumerate}
-	\item Person 1 - Technical Lead
-	\item Person 2 - C\# enthusiast, Machine Learning Engineer
-	\item Person 3 - Polyglot Programmer with experience in every aspect of development
-	\item Person 4 - C/C++ Programmer with 20+ years of experience
-\end{enumerate}
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf3}
+    \caption{Test 3: Delivery times}
+    \label{fig:test-perf3}
+\end{figure}
 
-I presented the whole idea to them and also the implementation and deployment. Discussion was surprisingly not very heated, but it sure opened a couple doors I hadn't considered. 
+\subsection{Test 4: 5 Nodes, two machines. 50 messages}
+The scenario for this test is almost the same as Test 3, except this time the \textit{Node-server} on machine \textit{Server1} is also running, scaling the system onto a second machine. As there are now 5 nodes, it also means 50 more messages need to be delivered, making it a total of 250 delivered messages.
 
-\newpage
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 3.296\\
+\hline
+2 & 3.448\\
+\hline
+3 & 2.852\\
+\hline
+4 & 3.2\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 4}
+\label{tab:test-perf4}
+\end{table}
 
-In a wide range of questions from topics like deployment, scalability and usability of the mobile applications, the most interesting questions were:
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf4}
+    \caption{Test 4: Delivery times}
+    \label{fig:test-perf4}
+\end{figure}
 
-\begin{itemize}
-	\item "What is semantic about this?"
-	\item[] The "semantic" in this is the fact that I am working with the domain vocabularies defined by people with real business needs. Semantic here refers to the content and meaning of the reported events. It is the higher-level analysis.
-	
-	\item "Is it possible to do dynamic loading of the configuration after it's been compiled?"
-	\item[] Unfortunately not yet, but it is something to be considered. It is definitely doable.
-	
-	\item "Are you handling versioning of the configurations?"
-	\item[] Not at the moment, but it is a possibility to explore, especially if dynamic loading was to be supported.
-	
-	\item "So if the JIRA API changes, the whole workflow is broken?"
-	\item[] Yes, very broken.
-	
-\end{itemize}
+The data from Tests 3 and 4 continue to support the trend from Tests 1 and 2, where the larger the ammount of messages pushed through the communication channel at one time, the longer the message delivery time. However, for the same amount of delivered messages (200), we can see that Test 3 has higher average delivery time than Test 2. As Test 3 distributes the load among multiple Nodes, this further supports the hypothesis that the bottleneck that is being congested is the websocket connection, not the system itself.
 
-\subsubsection*{Conclusion}
+\clearpage
 
-This was an eye-opener as well. In the era of "Semantic Web", it is important to be able to explain the system clearly - what it does, what it's meant to do. The focus is the semantics - the meaning of all the user interactions.
+\subsection{Test 5: Communication simulation. 50 messges, 20ms interval}
+This scenario aims to simulate a real-time communication between two clients, with a two-way constant stream of data from one to the other and vice versa. One client is connected to Node \textit{Node001} on machine \textit{Server2} and the other to Node \textit{Node-server} on machine \textit{Server1}. The individual messages are separated with 20ms intervals, mimicking a real communication closer than the previous tests, which pushed all messages at once.
 
-Some nice ideas were discussed as well, especially with regard to dynamic loading. It could be very interesting to be able to reload the names, but I can't imagine at the moment how to address the already coded events assigned to a workflow with a given start and finish.
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 0.42\\
+\hline
+2 & 0.42\\
+\hline
+3 & 0.32\\
+\hline
+4 & 0.22\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 5}
+\label{tab:test-perf5}
+\end{table}
 
-Last but not least, it is important to watch JIRA and inform the department in charge of updating JIRA to keep in mind that there is an application that is dependent on it. Thankfully it is not the end of the world if the Semantic Data Manager is down for a few hours, because the main load is done by the Tracking Engine. However, it is out of my hands if the JIRA API changes.
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf5}
+    \caption{Test 5: Delivery times}
+    \label{fig:test-perf5}
+\end{figure}
+
+\clearpage
+
+\subsection{Test 6: Communication simulation. 200 messages, 20ms interval}
+This scenario is the same as the one in Test 5, except with 200 messages.
+
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 2.17\\
+\hline
+2 & 2.19\\
+\hline
+3 & 1.21\\
+\hline
+4 & 1.47\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 6}
+\label{tab:test-perf6}
+\end{table}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.7\textwidth]{figures/05_testing/test-perf6}
+    \caption{Test 6: Delivery times}
+    \label{fig:test-perf6}
+\end{figure}
+
+The data from Tests 5 and 6 immediately shows a drastic decrease in delivery time as congestion on the websockets is relieved and processing load is distributed over two machines. The times are higher than in Tests 1 and 2, but that is likely due to the fact that messages have to travel over the network to \textit{Node-server}, while Tests 1 and 2 were executed completely on a single machine.
+
+\clearpage
+
+\subsection{Test 7: Communication simulation. 200 messages, 100ms interval}
+This scenario is the same as the one in Tests 5 and 6, except the interval between messages has been raised to 100ms to further free up the websocket channel. This scenario simulates a real-time application that sends ten messages per second.
+
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 0.115\\
+\hline
+2 & 0.125\\
+\hline
+3 & 0.115\\
+\hline
+4 & 0.095\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 7}
+\label{tab:test-perf7}
+\end{table}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{figures/05_testing/test-perf7}
+    \caption{Test 7: Delivery times}
+    \label{fig:test-perf7}
+\end{figure}
+
+\subsection{Test 8: Communication simulation. 1000 messages, 100ms interval}
+This scenario is the same as the one in Tests 7, but with 1000 messages.
+
+\begin{table}[!ht]
+\begin{center}
+\begin{tabularx}{0.7\textwidth}{l|l}
+\hline
+\textbf{Measurement \#} & \textbf{Average message delivery time (ms)} \\
+\hline
+1 & 0.189\\
+\hline
+2 & 0.061\\
+\hline
+3 & 0.082\\
+\hline
+4 & 0.52\\
+\hline
+\end{tabularx}
+\end{center}
+\caption{Average message delivery time for Test 8}
+\label{tab:test-perf8}
+\end{table}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/05_testing/test-perf8}
+    \caption{Test 8: Delivery times}
+    \label{fig:test-perf8}
+\end{figure}
+
+\subsection{Performance Test Conclusion}
+The data from Tests 7 and 8 shows that most messages are delivered under 1ms, even with a large volume of messages. Combining this with the data from Tests 1 through 6, it can be assumed that the largest bottleneck of the system is the websocket channel between Nodes and clients and is based solely on connectivity.

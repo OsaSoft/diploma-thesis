@@ -12,24 +12,27 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.logging.Level
 
-class MultiNodeMultiMessageTest implements Runnable {
-    static username = "multi-node-multi-msg-test"
+class CommunicationTest implements Runnable {
 
-    List<String> urls = []
+    static final username = { id -> "communication-test-u$id" }
+
     int msgNum
+    int delay
+    String host1
+    String host2
 
-    MultiNodeMultiMessageTest(String... args) {
-        msgNum = Integer.parseInt(args[0])
-        urls.addAll(args.drop(1))
+    CommunicationTest(String... args) {
+        msgNum = Integer.parseInt(args[2])
+        delay = Integer.parseInt(args[3])
+        (host1, host2) = args.take(2)
     }
 
     @Override
     void run() {
-        println "Running multiple node multiple messages test"
-        println "Number of nodes: ${urls.size()}"
-        println "Number of messages to send: $msgNum"
+        println "Running communication simulation test"
+        println "Hosts are: $host1 and $host2}"
 
-        CountDownLatch latch = new CountDownLatch(msgNum * urls.size())
+        CountDownLatch latch = new CountDownLatch(msgNum)
         def startFinishTimes = new ConcurrentLinkedDeque<>()
 
         MsgrClient.setLoggerLevel(Level.SEVERE)
@@ -43,11 +46,10 @@ class MultiNodeMultiMessageTest implements Runnable {
         }
 
         def clients = []
-        urls.each {
-            def deviceToken = it[-2..-1]
-            def client = Util.buildBaseClient(it, true)
-            client.deviceToken = "con-test-device-node-$deviceToken"
-            client.userName = username
+        [host1, host2].eachWithIndex { host, id ->
+            def client = Util.buildBaseClient(host, true)
+            client.deviceToken = "communication-test-dev$id"
+            client.userName = username(id)
             client.wsMessageListener = listener
 
             client.init()
@@ -55,14 +57,17 @@ class MultiNodeMultiMessageTest implements Runnable {
         }
 
         //wait a bit so all clients are initialized and topics are subscribed on nodes
-        sleep(1000)
+        sleep(500)
 
         println "Starting sending..."
         msgNum.times {
             def client = MsgrMessageUtils.randomElement(clients)
-            def msg = new DataMessageDto(targetUsers: [client.userId], content: [msgId: UUID.randomUUID().toString()])
+            // flips the user id. If 0 => abs(-1) = 1. If 1 => abs(0) = 0
+            def target = clients[(Integer.parseInt(client.userName[-1]) - 1).abs()].userId
+            def msg = new DataMessageDto(targetUsers: [target], content: [msgId: UUID.randomUUID().toString()])
             msg.content.startTime = System.currentTimeSeconds()
             client.send(msg)
+            sleep(delay)
         }
 
         def result = latch.await(20, TimeUnit.SECONDS)
@@ -80,7 +85,7 @@ class MultiNodeMultiMessageTest implements Runnable {
 
             println "Average delivery time: ${average}ms"
 
-            def file = new File("multi-node-multi-msg-${urls.size()}-${msgNum}.csv").withWriter("UTF-8") {
+            def file = new File("communication-test-${msgNum}-${delay}.csv").withWriter("UTF-8") {
                 it.writeLine("Times;" + times.join(";"))
                 it.writeLine("Avg;$average")
             }

@@ -153,7 +153,7 @@ class MessagingService implements IMessagingService {
                 if (device.platform.stateless) {
                     mqSender.send([device.platform.name], new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetDevices: deviceIds), notification: true]).toString(), true)
                 } else {
-                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetDevices: deviceIds), notification: true]).toString())
+                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new NotificationDto(title: title, body: body, targetDevices: deviceIds), notification: true]).toString(), true)
                 }
             }
         }
@@ -186,7 +186,7 @@ class MessagingService implements IMessagingService {
                 if (device.platform.stateless) {
                     mqSender.send([device.platform.name], new JsonBuilder([payload: new DataMessageDto(content: data, targetDevices: deviceIds), notification: false]).toString(), true)
                 } else {
-                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new DataMessageDto(content: data, targetDevices: deviceIds), notification: false]).toString())
+                    mqSender.send(["${device.platform.name}.$device.id"], new JsonBuilder([payload: new DataMessageDto(content: data, targetDevices: deviceIds), notification: false]).toString(), true)
                 }
             }
         }
