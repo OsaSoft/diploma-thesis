@@ -10,6 +10,7 @@ Master's Thesis at Czech Technical University in Prague (Summer 2018)
 
 This diploma thesis describes a horizontally scalable server-side application that allows sending messages across different platforms, with emphasis on modularity and easy expandability.
 The majority of the thesis and application is focused on the scalability aspect of distributing the system among a large number of computational nodes.
+
 The application’s purpose is to serve as a framework and foundation to be built upon and expanded for usage in modern applications.
 
 - [Oscar Hernández](http://github.com/OsaSoft) ([@Osa_Soft](https://twitter.com/Osa_Soft))
